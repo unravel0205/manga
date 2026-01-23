@@ -148,6 +148,8 @@
       var s39 = useState(''); var newCharName = s39[0], setNewCharName = s39[1];
       var s40 = useState(null); var newCharImg = s40[0], setNewCharImg = s40[1];
       var s41 = useState(''); var newProjName = s41[0], setNewProjName = s41[1];
+      var s42 = useState(''); var genStage = s42[0], setGenStage = s42[1];
+      var s43 = useState(null); var lastScript = s43[0], setLastScript = s43[1];
 
       var fileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
@@ -243,6 +245,44 @@
           setSelChars(nc);
         };
         r.readAsDataURL(f);
+      }
+
+      function genScriptPrompt() {
+        var hasC = selChars[1] !== null;
+        var speechBase = speech === 'formal'
+          ? '敬語（です・ます調）を基本とし、語尾パターンを最低3種類使い分ける（問いかけ系、説明系、展開系、強調系、締め系）'
+          : 'タメ口（カジュアル）を基本とし、語尾パターンを最低3種類使い分ける（問いかけ系、説明系、展開系、強調系、締め系）';
+
+        return 'あなたは4コマ漫画の構成作家です。以下の記事内容をもとに、4コマ漫画の詳細な構成台本を作成してください。\n\n' +
+          '【登場人物】\n' +
+          (hasC
+            ? '・説明者（メインキャラ）：記事内容を解説する役割\n・相談者（サブキャラ）：質問・リアクション役。相談者は絶対に説明をしない\n'
+            : '・説明者（1人のみ）：読者に語りかける形式\n') +
+          '\n【セリフスタイル】\n' + speechBase + '\n\n' +
+          '【構成ルール】\n' +
+          '・4コマ中、1コマはキャラクター不在にする（概念イメージカット、図解、風景、クローズアップ等）\n' +
+          '・不在コマでは吹き出しを使わず、ナレーション枠やタイトル形式にする\n' +
+          '・1吹き出し：最大25文字以内\n' +
+          '・1コマ合計：最大35文字以内\n' +
+          '・1コマ内の吹き出しは最大2つまで\n' +
+          '・同じアングル・表情・構図を連続させない\n' +
+          '・4コマ内で最低3種類のアングル（正面／斜め45度／横顔／俯瞰／煽り）\n' +
+          '・距離も変化させる（バストアップ／顔アップ／全身／上半身）\n' +
+          '・背景は最低3種類のバリエーション（場所情景／イメージ画像／図解／光の表現／自然背景）\n' +
+          '・感情と背景を連動させる（不安→グレー系、発見→放射光、理解→キラキラ、安心→自然情景）\n' +
+          '・記事に書かれていない事実や誇張は入れない\n' +
+          '・この4コマはストーリーの一部として機能する（完結しなくてよい）\n\n' +
+          '【出力フォーマット】以下の形式で出力してください：\n\n' +
+          '===コマ1===\n' +
+          '登場: （説明者のみ／相談者のみ／両方／なし）\n' +
+          'アングル: （正面バストアップ／斜め45度上半身／横顔アップ 等）\n' +
+          '表情: （具体的に）\n' +
+          '背景: （具体的に描写）\n' +
+          '吹き出し1: 「セリフ」（話者名）\n' +
+          '吹き出し2: 「セリフ」（話者名）※あれば\n' +
+          '吹き出し形状: （丸型／雲型／トゲトゲ型）\n\n' +
+          '===コマ2===\n...\n===コマ3===\n...\n===コマ4===\n...\n\n' +
+          '---\n【記事内容】\n' + story;
       }
 
       function genPrompt() {
@@ -387,83 +427,130 @@
         setGenImages([]);
         setCurImg(0);
         cancelRef.current = false;
-        
+        setGenStage('script');
+        setLastScript(null);
+
         var m = MODELS.find(function(x) { return x.id === model; });
         var currentImages = [];
 
-        function generateOne(i) {
-          if (i >= genCount || cancelRef.current) { setIsGen(false); return; }
-          setGenIdx(i);
-          
-          var parts = [];
-          selChars.forEach(function(c) {
-            if (c && c.img) {
-              var b = c.img.split(',')[1];
-              parts.push({ inlineData: { mimeType: 'image/png', data: b } });
-            }
-          });
-          if (style === 99 && styleRef && styleRef.img) {
-            var b = styleRef.img.split(',')[1];
-            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
-          }
-
-          var body = {
-            system_instruction: { parts: [{ text: genPrompt() }] },
-            contents: [{ parts: parts.concat([{ text: story }]) }],
-            generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
+        // Stage 1: 構成台本を生成（テキストのみ）
+        function runStage1(callback) {
+          var scriptBody = {
+            system_instruction: { parts: [{ text: genScriptPrompt() }] },
+            contents: [{ parts: [{ text: story }] }],
+            generationConfig: { responseMimeType: 'text/plain' }
           };
 
-          fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
+          fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify(scriptBody)
           })
           .then(function(res) {
-            if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'API error'); });
+            if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Stage1 error'); });
             return res.json();
           })
           .then(function(data) {
-            var img = null;
+            var scriptText = '';
             if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
               data.candidates[0].content.parts.forEach(function(p) {
-                if (p.inlineData) img = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
+                if (p.text) scriptText += p.text;
               });
             }
-            if (img) {
-              currentImages = currentImages.concat([img]);
-              setGenImages(currentImages.slice());
-              setCurImg(i);
-
-              var st = STYLES.find(function(s) { return s.id === style; });
-              var hi = { id: 'g_' + Date.now() + '_' + i, img: img, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
-              
-              try {
-                var savedHist = localStorage.getItem('manga_history');
-                var histArr = savedHist ? JSON.parse(savedHist) : [];
-                histArr.unshift(hi);
-                if (histArr.length > 50) histArr = histArr.slice(0, 50);
-                localStorage.setItem('manga_history', JSON.stringify(histArr));
-                setHistory(histArr);
-
-                var now = new Date();
-                var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                var savedUsage = localStorage.getItem('manga_usage');
-                var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
-                if (!usageData.monthly) usageData.monthly = [];
-                var md = usageData.monthly.find(function(x) { return x.month === mk; });
-                if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
-                md.items.push({ date: now.toISOString(), model: model, price: m.price });
-                usageData.total.count = (usageData.total.count || 0) + 1;
-                usageData.total.cost = (usageData.total.cost || 0) + m.price;
-                localStorage.setItem('manga_usage', JSON.stringify(usageData));
-                setUsage(usageData);
-              } catch(e) {}
-            }
-            generateOne(i + 1);
+            if (!scriptText) { throw new Error('構成台本の生成に失敗しました'); }
+            setLastScript(scriptText);
+            callback(scriptText);
           })
-          .catch(function(e) { setError('エラー: ' + e.message); setIsGen(false); });
+          .catch(function(e) { setError('エラー: ' + e.message); setIsGen(false); setGenStage(''); });
         }
-        generateOne(0);
+
+        // Stage 2: 台本をもとに画像生成
+        function runStage2(script) {
+          setGenStage('image');
+
+          function generateOne(i) {
+            if (i >= genCount || cancelRef.current) { setIsGen(false); setGenStage(''); return; }
+            setGenIdx(i);
+
+            var parts = [];
+            selChars.forEach(function(c) {
+              if (c && c.img) {
+                var b = c.img.split(',')[1];
+                parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+              }
+            });
+            if (style === 99 && styleRef && styleRef.img) {
+              var b = styleRef.img.split(',')[1];
+              parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+            }
+
+            var imagePrompt = genPrompt() + '\n\n' +
+              '【以下の構成台本に厳密に従って描画してください】\n' + script;
+
+            var body = {
+              system_instruction: { parts: [{ text: imagePrompt }] },
+              contents: [{ parts: parts.concat([{ text: '上記の構成台本に従い、4コマ漫画を描いてください。' }]) }],
+              generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
+            };
+
+            fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            })
+            .then(function(res) {
+              if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'API error'); });
+              return res.json();
+            })
+            .then(function(data) {
+              var img = null;
+              if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                data.candidates[0].content.parts.forEach(function(p) {
+                  if (p.inlineData) img = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
+                });
+              }
+              if (img) {
+                currentImages = currentImages.concat([img]);
+                setGenImages(currentImages.slice());
+                setCurImg(i);
+
+                var st = STYLES.find(function(s) { return s.id === style; });
+                var hi = { id: 'g_' + Date.now() + '_' + i, img: img, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
+
+                try {
+                  var savedHist = localStorage.getItem('manga_history');
+                  var histArr = savedHist ? JSON.parse(savedHist) : [];
+                  histArr.unshift(hi);
+                  if (histArr.length > 50) histArr = histArr.slice(0, 50);
+                  localStorage.setItem('manga_history', JSON.stringify(histArr));
+                  setHistory(histArr);
+
+                  var now = new Date();
+                  var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                  var savedUsage = localStorage.getItem('manga_usage');
+                  var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
+                  if (!usageData.monthly) usageData.monthly = [];
+                  var md = usageData.monthly.find(function(x) { return x.month === mk; });
+                  if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
+                  md.items.push({ date: now.toISOString(), model: model, price: m.price });
+                  usageData.total.count = (usageData.total.count || 0) + 1;
+                  usageData.total.cost = (usageData.total.cost || 0) + m.price;
+                  localStorage.setItem('manga_usage', JSON.stringify(usageData));
+                  setUsage(usageData);
+                } catch(e) {}
+              }
+              generateOne(i + 1);
+            })
+            .catch(function(e) { setError('エラー: ' + e.message); setIsGen(false); setGenStage(''); });
+          }
+          generateOne(0);
+        }
+
+        // パイプライン実行: Stage1 → Stage2
+        runStage1(function(script) {
+          if (cancelRef.current) { setIsGen(false); setGenStage(''); return; }
+          runStage2(script);
+        });
       }
 
       function dl(img, i) {
@@ -665,12 +752,28 @@
             <div class="mb-6">
               ${isGen ? html`
                 <div class="p-4 bg-blue-50 rounded-lg">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</span>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-semibold">${genStage === 'script' ? '構成台本を作成中...' : '画像生成中... ' + (genIdx + 1) + '/' + genCount + '枚'}</span>
                     <button onClick=${function() { cancelRef.current = true; }} class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">停止</button>
                   </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
-                  ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
+                  <div class="flex gap-2 mb-3">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${genStage === 'script' ? 'bg-blue-500 text-white animate-pulse' : 'bg-green-500 text-white'}">1</div>
+                        <span class="text-xs ${genStage === 'script' ? 'text-blue-700 font-semibold' : 'text-green-700'}">構成台本</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="${genStage === 'script' ? 'bg-blue-500 animate-pulse' : 'bg-green-500'} h-1.5 rounded-full" style=${{ width: genStage === 'script' ? '50%' : '100%' }}></div></div>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${genStage === 'image' ? 'bg-blue-500 text-white animate-pulse' : genStage === 'script' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}">2</div>
+                        <span class="text-xs ${genStage === 'image' ? 'text-blue-700 font-semibold' : 'text-gray-500'}">画像生成</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="${genStage === 'image' ? 'bg-blue-500' : 'bg-gray-200'} h-1.5 rounded-full" style=${{ width: genStage === 'image' ? ((genIdx + 1) / genCount * 100) + '%' : '0%' }}></div></div>
+                    </div>
+                  </div>
+                  ${genStage === 'script' && html`<div class="text-xs text-gray-600 bg-white rounded p-2">セリフ・表情・アングル・背景を計画しています...</div>`}
+                  ${genImages.length > 0 && html`<div class="mt-3 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
                 </div>
               ` : html`<button onClick=${generate} disabled=${!apiSaved} class="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-bold rounded-lg disabled:opacity-50">漫画を生成（${genCount}枚）</button>`}
               ${error && html`<div class="text-red-600 text-sm mt-2 text-center">${error}</div>`}
