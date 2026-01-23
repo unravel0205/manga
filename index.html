@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>漫画クリエイター</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s; }
+    .tooltip-trigger:hover .tooltip { visibility: visible; opacity: 1; }
+    .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    .accordion-content.open { max-height: 2000px; }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 50; transition: left 0.3s ease; width: 85%; max-width: 360px; }
+      .sidebar.open { left: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/htm@3/dist/htm.umd.js"></script>
+  
+  <script>
+    var html = htm.bind(React.createElement);
+    var useState = React.useState;
+    var useEffect = React.useEffect;
+    var useRef = React.useRef;
+
+    // 定数
+    var STYLES = [
+      { id: 1, name: 'ビジネス説明マンガ風', desc: 'パステルカラーで信頼感のある企業向け', prompt: 'Japanese business explainer manga style. Pastel colors (pink, light purple, pale blue). Professional and trustworthy atmosphere.' },
+      { id: 2, name: '少年漫画風', desc: '太い線と力強い表現', prompt: 'Japanese shonen manga style. Dynamic lines, bold colors, energetic atmosphere with impact lines.' },
+      { id: 3, name: '少女漫画風', desc: '繊細な線とキラキラ効果', prompt: 'Japanese shoujo manga style. Soft lines, sparkly effects, romantic atmosphere with flower motifs.' },
+      { id: 4, name: 'シンプル線画風', desc: 'ミニマルでスッキリ', prompt: 'Minimalist line art style. Clean black outlines with flat colors. Simple and modern.' },
+      { id: 5, name: 'アメコミ風', desc: 'ポップで派手な色使い', prompt: 'American comic book style. Bold outlines, vibrant colors, halftone dots, pop art influenced.' },
+      { id: 6, name: '水彩イラスト風', desc: '柔らかく芸術的', prompt: 'Watercolor illustration style. Soft edges, blended colors, artistic and gentle atmosphere.' },
+      { id: 7, name: 'レトロ漫画風', desc: '昭和の懐かしい雰囲気', prompt: 'Retro Japanese manga style (1970s-80s). Nostalgic coloring, classic screen tones, vintage aesthetic.' },
+      { id: 8, name: 'Webtoon風', desc: '現代的でクリーン', prompt: 'Korean webtoon style. Clean digital art, soft shading, modern character designs, bright colors.' },
+      { id: 9, name: '絵本イラスト風', desc: '温かみのある丸い絵柄', prompt: 'Picture book illustration style. Warm, friendly, rounded shapes, gentle colors.' },
+      { id: 10, name: 'クール・スタイリッシュ風', desc: 'モノトーン基調でおしゃれ', prompt: 'Cool stylish manga style. Monochromatic base with accent colors, sophisticated urban aesthetic.' },
+      { id: 99, name: '画像から参照', desc: '添付画像の雰囲気に合わせます', prompt: '' }
+    ];
+
+    var MODELS = [
+      { id: '4k', name: '高品質 4K（有料）', model: 'gemini-3-pro-image-preview', price: 0.24, jpy: 36 },
+      { id: '2k', name: '高品質 2K（有料）', model: 'gemini-3-pro-image-preview', price: 0.134, jpy: 20 },
+      { id: 'free', name: '標準（無料）', model: 'gemini-2.5-flash-image', price: 0, jpy: 0 }
+    ];
+
+    var SAMPLES = [
+      { id: 1, cat: 'ビジネス', title: 'ビジネス説明マンガ', style: 1 },
+      { id: 2, cat: '教育', title: '教育系解説マンガ', style: 1 },
+      { id: 3, cat: '商品紹介', title: '商品紹介マンガ', style: 8 },
+      { id: 4, cat: 'ビジネス', title: '採用広報マンガ', style: 2 },
+      { id: 5, cat: '教育', title: '歴史解説マンガ', style: 7 },
+      { id: 6, cat: '商品紹介', title: 'サービス紹介', style: 3 }
+    ];
+
+    var HELP = {
+      api: '【APIキー取得手順】\n\n1. https://aistudio.google.com/ にアクセス\n2. Googleアカウントでログイン\n3. 左メニュー「Get API Key」をクリック\n4. 「Create API Key」をクリック\n5. 表示されたキーをコピー（AIza...で始まる）\n6. このアプリに貼り付けて「保存」\n\n※キーは他人に共有しないでください',
+      model: '【モデル選択】\n\n■ 高品質 4K（有料）\n$0.24/枚（約36円）最高品質\n\n■ 高品質 2K（有料）\n$0.134/枚（約20円）高品質\n\n■ 標準（無料）\n1日500枚まで無料',
+      character: '【キャラクター設定】\n\n■ 説明者（必須）\nメインで話を進めるキャラ\n\n■ 相談者（任意）\n質問役。設定すると会話形式に\n\n■ 参考3・4（任意）\n漫画に登場させたい写真など',
+      style: '【絵のテイスト】\n絵柄を選択できます。\n★でお気に入り登録すると上に表示。\n「画像から参照」で添付画像に合わせます。',
+      story: '【入力のコツ】\n・100〜500文字程度が目安\n・箇条書きでもOK\n・感情を入れると表現豊かに'
+    };
+
+    var TUTORIAL = [
+      { title: 'ようこそ！', content: 'このツールでは、ストーリーを入力するだけで\n4コマ漫画が自動生成されます。\n\nキャラクターや絵のスタイルを\n自由にカスタマイズできます。' },
+      { title: 'STEP 1: APIキー設定', content: 'Google AI StudioでAPIキーを取得し、\n設定してください。\n\n無料で取得できます。\n詳しくは「?」マークをクリック！' },
+      { title: 'STEP 2: キャラクター', content: '説明者（必須）と相談者（任意）の\n画像を設定します。\n\nライブラリに保存すると\n次回からワンクリックで使えます。' },
+      { title: 'STEP 3: スタイル', content: '絵のテイストを10種類以上から選択。\n\nセリフの話し方（敬語/タメ口）も\n選べます。' },
+      { title: 'STEP 4: 生成！', content: 'ストーリーを入力して\n「漫画を生成」ボタンをクリック！\n\n複数枚の同時生成もできます。\nさあ、始めましょう！' }
+    ];
+
+    // ヘルプアイコン
+    function HelpIcon(props) {
+      return html`
+        <div class="tooltip-trigger relative inline-block ml-2">
+          <div class="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center cursor-help text-xs text-gray-600 font-bold hover:bg-gray-300">?</div>
+          <div class="tooltip absolute z-50 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg left-7 top-0 whitespace-pre-wrap">${props.text}</div>
+        </div>
+      `;
+    }
+
+    // モーダル
+    function Modal(props) {
+      if (!props.isOpen) return null;
+      var sizes = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', full: 'max-w-[95vw]' };
+      return html`
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick=${props.onClose}>
+          <div class="bg-white rounded-xl w-full ${sizes[props.size] || sizes.md} max-h-[90vh] overflow-hidden flex flex-col" onClick=${function(e) { e.stopPropagation(); }}>
+            <div class="flex justify-between items-center p-4 border-b">
+              <h3 class="text-lg font-bold">${props.title}</h3>
+              <button onClick=${props.onClose} class="text-gray-500 hover:text-gray-700 text-2xl leading-none">×</button>
+            </div>
+            <div class="overflow-y-auto flex-1 p-4">${props.children}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // メインアプリ
+    function App() {
+      var s1 = useState(''); var apiKey = s1[0], setApiKey = s1[1];
+      var s2 = useState(false); var apiSaved = s2[0], setApiSaved = s2[1];
+      var s3 = useState(false); var showApi = s3[0], setShowApi = s3[1];
+      var s4 = useState([]); var chars = s4[0], setChars = s4[1];
+      var s5 = useState([null, null, null, null]); var selChars = s5[0], setSelChars = s5[1];
+      var s6 = useState(1); var style = s6[0], setStyle = s6[1];
+      var s7 = useState(null); var styleRef = s7[0], setStyleRef = s7[1];
+      var s8 = useState([]); var favStyles = s8[0], setFavStyles = s8[1];
+      var s9 = useState('formal'); var speech = s9[0], setSpeech = s9[1];
+      var s10 = useState('4k'); var model = s10[0], setModel = s10[1];
+      var s11 = useState(''); var story = s11[0], setStory = s11[1];
+      var s12 = useState(1); var genCount = s12[0], setGenCount = s12[1];
+      var s13 = useState([]); var genImages = s13[0], setGenImages = s13[1];
+      var s14 = useState(0); var curImg = s14[0], setCurImg = s14[1];
+      var s15 = useState(false); var isGen = s15[0], setIsGen = s15[1];
+      var s16 = useState(0); var genIdx = s16[0], setGenIdx = s16[1];
+      var s17 = useState(''); var error = s17[0], setError = s17[1];
+      var s18 = useState([]); var history = s18[0], setHistory = s18[1];
+      var s19 = useState([]); var favHist = s19[0], setFavHist = s19[1];
+      var s20 = useState([]); var projects = s20[0], setProjects = s20[1];
+      var s21 = useState(null); var curProj = s21[0], setCurProj = s21[1];
+      var s22 = useState({ monthly: [], total: { count: 0, cost: 0 } }); var usage = s22[0], setUsage = s22[1];
+      var s23 = useState(false); var sidebar = s23[0], setSidebar = s23[1];
+      var s24 = useState(['char', 'style']); var accord = s24[0], setAccord = s24[1];
+      var s25 = useState(null); var lastSave = s25[0], setLastSave = s25[1];
+      var s26 = useState(false); var showTut = s26[0], setShowTut = s26[1];
+      var s27 = useState(0); var tutStep = s27[0], setTutStep = s27[1];
+      var s28 = useState(false); var showSamp = s28[0], setShowSamp = s28[1];
+      var s29 = useState(false); var showHist = s29[0], setShowHist = s29[1];
+      var s30 = useState(false); var showUsage = s30[0], setShowUsage = s30[1];
+      var s31 = useState(false); var showAddChar = s31[0], setShowAddChar = s31[1];
+      var s32 = useState(false); var showAddProj = s32[0], setShowAddProj = s32[1];
+      var s33 = useState(false); var showImg = s33[0], setShowImg = s33[1];
+      var s34 = useState(null); var modalImg = s34[0], setModalImg = s34[1];
+      var s35 = useState(false); var showHistDet = s35[0], setShowHistDet = s35[1];
+      var s36 = useState(null); var histDet = s36[0], setHistDet = s36[1];
+      var s37 = useState(false); var showDraft = s37[0], setShowDraft = s37[1];
+      var s38 = useState(null); var draft = s38[0], setDraft = s38[1];
+      var s39 = useState(''); var newCharName = s39[0], setNewCharName = s39[1];
+      var s40 = useState(null); var newCharImg = s40[0], setNewCharImg = s40[1];
+      var s41 = useState(''); var newProjName = s41[0], setNewProjName = s41[1];
+
+      var fileRef = useRef(null);
+      var charRefs = useRef([null, null, null, null]);
+      var styleRefInput = useRef(null);
+      var cancelRef = useRef(false);
+
+      // 初期化
+      useEffect(function() {
+        try {
+          var k = localStorage.getItem('manga_api_key');
+          if (k) { setApiKey(k); setApiSaved(true); }
+          var c = localStorage.getItem('manga_chars');
+          if (c) setChars(JSON.parse(c));
+          var f = localStorage.getItem('manga_fav_styles');
+          if (f) setFavStyles(JSON.parse(f));
+          var h = localStorage.getItem('manga_history');
+          if (h) setHistory(JSON.parse(h));
+          var fh = localStorage.getItem('manga_fav_hist');
+          if (fh) setFavHist(JSON.parse(fh));
+          var p = localStorage.getItem('manga_projects');
+          if (p) setProjects(JSON.parse(p));
+          var u = localStorage.getItem('manga_usage');
+          if (u) setUsage(JSON.parse(u));
+          var t = localStorage.getItem('manga_tut_seen');
+          if (!t) setShowTut(true);
+          var d = localStorage.getItem('manga_draft');
+          if (d) {
+            var dd = JSON.parse(d);
+            if (dd.story && dd.story.length > 0) { setDraft(dd); setShowDraft(true); }
+          }
+        } catch(e) { console.error(e); }
+      }, []);
+
+      // 下書き自動保存
+      useEffect(function() {
+        var timer = setTimeout(function() {
+          try {
+            localStorage.setItem('manga_draft', JSON.stringify({ story: story, style: style, speech: speech, model: model, genCount: genCount, ts: new Date().toISOString() }));
+            setLastSave(new Date());
+          } catch(e) {}
+        }, 3000);
+        return function() { clearTimeout(timer); };
+      }, [story, style, speech, model, genCount]);
+
+      function restoreDraft() {
+        if (draft) {
+          setStory(draft.story || '');
+          setStyle(draft.style || 1);
+          setSpeech(draft.speech || 'formal');
+          setModel(draft.model || '4k');
+          setGenCount(draft.genCount || 1);
+        }
+        setShowDraft(false);
+      }
+
+      function saveApi() {
+        localStorage.setItem('manga_api_key', apiKey);
+        setApiSaved(true);
+      }
+
+      function toggleFavStyle(id) {
+        var nf = favStyles.indexOf(id) >= 0 ? favStyles.filter(function(x) { return x !== id; }) : favStyles.concat([id]);
+        setFavStyles(nf);
+        localStorage.setItem('manga_fav_styles', JSON.stringify(nf));
+      }
+
+      function addChar() {
+        if (!newCharName || !newCharImg) return;
+        var nc = { id: 'c_' + Date.now(), name: newCharName, img: newCharImg };
+        var ncs = chars.concat([nc]);
+        setChars(ncs);
+        localStorage.setItem('manga_chars', JSON.stringify(ncs));
+        setShowAddChar(false);
+        setNewCharName('');
+        setNewCharImg(null);
+      }
+
+      function delChar(id) {
+        if (!confirm('削除しますか？')) return;
+        var ncs = chars.filter(function(c) { return c.id !== id; });
+        setChars(ncs);
+        localStorage.setItem('manga_chars', JSON.stringify(ncs));
+        setSelChars(selChars.map(function(c) { return c && c.id === id ? null : c; }));
+      }
+
+      function handleFile(e, idx) {
+        var f = e.target.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function(ev) {
+          var nc = selChars.slice();
+          nc[idx] = { id: 't_' + Date.now(), name: f.name, img: ev.target.result, temp: true };
+          setSelChars(nc);
+        };
+        r.readAsDataURL(f);
+      }
+
+      function genPrompt() {
+        var st = STYLES.find(function(s) { return s.id === style; });
+        var hasC = selChars[1] !== null;
+        var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
+        var spch = speech === 'formal' ? '敬語（です・ます調）を基本とし、同じ語尾が連続しないよう3種類以上使い分ける' : 'タメ口（カジュアル）を基本とし、親しみやすく、語尾を3種類以上使い分ける';
+        var charRule = hasC ? '【キャラクター】2人構成。1枚目の画像が説明役、2枚目が相談役' : '【キャラクター】1人で読者に語りかける形式';
+        var refTxt = (selChars[2] || selChars[3]) ? '【参考画像】追加の参考画像を漫画内で適切に使用してください。' : '';
+        return (hasC ? '2人' : '1人') + 'のキャラクターが会話形式で語るマンガを生成してください。\n\n【絵のテイスト】\n' + spt + '\n\n【セリフスタイル】\n' + spch + '\n\n' + charRule + '\n\n' + refTxt + '\n\n【画像条件】\n・縦長1枚、アスペクト比 2:3\n・上から縦に4コマ構成\n・日本語は縦書き、右から左\n・カラーのみ\n\n---\n【記事内容】\n' + story;
+      }
+
+      function generate() {
+        if (!apiKey) { setError('APIキーを設定してください'); return; }
+        if (!selChars[0]) { setError('説明者を選択してください'); return; }
+        if (!story || story.length < 20) { setError('20文字以上入力してください'); return; }
+
+        setIsGen(true);
+        setError('');
+        setGenImages([]);
+        setCurImg(0);
+        cancelRef.current = false;
+        
+        var m = MODELS.find(function(x) { return x.id === model; });
+        var currentImages = [];
+
+        function generateOne(i) {
+          if (i >= genCount || cancelRef.current) { setIsGen(false); return; }
+          setGenIdx(i);
+          
+          var parts = [];
+          selChars.forEach(function(c) {
+            if (c && c.img) {
+              var b = c.img.split(',')[1];
+              parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+            }
+          });
+          if (style === 99 && styleRef && styleRef.img) {
+            var b = styleRef.img.split(',')[1];
+            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+          }
+
+          var body = {
+            system_instruction: { parts: [{ text: genPrompt() }] },
+            contents: [{ parts: parts.concat([{ text: story }]) }],
+            generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
+          };
+
+          fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          })
+          .then(function(res) {
+            if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'API error'); });
+            return res.json();
+          })
+          .then(function(data) {
+            var img = null;
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+              data.candidates[0].content.parts.forEach(function(p) {
+                if (p.inlineData) img = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
+              });
+            }
+            if (img) {
+              currentImages = currentImages.concat([img]);
+              setGenImages(currentImages.slice());
+              setCurImg(i);
+
+              var st = STYLES.find(function(s) { return s.id === style; });
+              var hi = { id: 'g_' + Date.now() + '_' + i, img: img, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
+              
+              try {
+                var savedHist = localStorage.getItem('manga_history');
+                var histArr = savedHist ? JSON.parse(savedHist) : [];
+                histArr.unshift(hi);
+                if (histArr.length > 50) histArr = histArr.slice(0, 50);
+                localStorage.setItem('manga_history', JSON.stringify(histArr));
+                setHistory(histArr);
+
+                var now = new Date();
+                var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                var savedUsage = localStorage.getItem('manga_usage');
+                var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
+                if (!usageData.monthly) usageData.monthly = [];
+                var md = usageData.monthly.find(function(x) { return x.month === mk; });
+                if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
+                md.items.push({ date: now.toISOString(), model: model, price: m.price });
+                usageData.total.count = (usageData.total.count || 0) + 1;
+                usageData.total.cost = (usageData.total.cost || 0) + m.price;
+                localStorage.setItem('manga_usage', JSON.stringify(usageData));
+                setUsage(usageData);
+              } catch(e) {}
+            }
+            generateOne(i + 1);
+          })
+          .catch(function(e) { setError('エラー: ' + e.message); setIsGen(false); });
+        }
+        generateOne(0);
+      }
+
+      function dl(img, i) {
+        var a = document.createElement('a');
+        a.href = img;
+        a.download = 'manga_' + Date.now() + '_' + (i + 1) + '.png';
+        a.click();
+      }
+
+      function toggleFavHist(id) {
+        var nf = favHist.indexOf(id) >= 0 ? favHist.filter(function(x) { return x !== id; }) : favHist.concat([id]);
+        setFavHist(nf);
+        localStorage.setItem('manga_fav_hist', JSON.stringify(nf));
+      }
+
+      function saveProj() {
+        if (!newProjName) return;
+        var p = { id: 'p_' + Date.now(), name: newProjName, settings: { selChars: selChars, style: style, styleRef: styleRef, speech: speech, model: model }, ts: new Date().toISOString() };
+        var np = projects.concat([p]);
+        setProjects(np);
+        localStorage.setItem('manga_projects', JSON.stringify(np));
+        setCurProj(p);
+        setShowAddProj(false);
+        setNewProjName('');
+      }
+
+      function loadProj(p) {
+        var s = p.settings;
+        if (s.selChars) setSelChars(s.selChars);
+        if (s.style) setStyle(s.style);
+        if (s.styleRef) setStyleRef(s.styleRef);
+        if (s.speech) setSpeech(s.speech);
+        if (s.model) setModel(s.model);
+        setCurProj(p);
+      }
+
+      function delProj(id) {
+        if (!confirm('削除しますか？')) return;
+        var np = projects.filter(function(p) { return p.id !== id; });
+        setProjects(np);
+        localStorage.setItem('manga_projects', JSON.stringify(np));
+        if (curProj && curProj.id === id) setCurProj(null);
+      }
+
+      function compTut() { localStorage.setItem('manga_tut_seen', '1'); setShowTut(false); setTutStep(0); }
+      function togAccord(k) { setAccord(accord.indexOf(k) >= 0 ? accord.filter(function(x) { return x !== k; }) : accord.concat([k])); }
+
+      var sortedStyles = STYLES.slice().sort(function(a, b) {
+        var aF = favStyles.indexOf(a.id) >= 0, bF = favStyles.indexOf(b.id) >= 0;
+        return aF && !bF ? -1 : !aF && bF ? 1 : 0;
+      });
+
+      function calcUsage() {
+        var now = new Date();
+        var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        var md = usage.monthly ? usage.monthly.find(function(m) { return m.month === mk; }) : null;
+        if (!md || !md.items) return { count: 0, cost: 0, by: {} };
+        var by = {}, cost = 0;
+        md.items.forEach(function(item) {
+          if (!by[item.model]) by[item.model] = { count: 0, cost: 0 };
+          by[item.model].count++;
+          by[item.model].cost += item.price;
+          cost += item.price;
+        });
+        return { count: md.items.length, cost: cost, by: by };
+      }
+      var mu = calcUsage();
+
+      function est() {
+        var m = MODELS.find(function(x) { return x.id === model; });
+        return { usd: (m.price * genCount).toFixed(2), jpy: Math.round(m.jpy * genCount) };
+      }
+
+      return html`
+        <div class="flex min-h-screen">
+          ${sidebar && html`<div class="md:hidden fixed inset-0 bg-black/50 z-40" onClick=${function() { setSidebar(false); }}></div>`}
+          
+          <div class="sidebar w-96 bg-white border-r p-5 overflow-y-auto flex-shrink-0 ${sidebar ? 'open' : ''}">
+            <div class="flex items-center justify-between mb-6">
+              <h1 class="text-xl font-bold text-gray-800">漫画クリエイター</h1>
+              <button class="md:hidden text-gray-500 text-2xl" onClick=${function() { setSidebar(false); }}>×</button>
+            </div>
+
+            <div class="flex gap-2 mb-6 text-sm">
+              <button onClick=${function() { setShowTut(true); }} class="text-blue-500 hover:underline">使い方</button>
+              <span class="text-gray-300">|</span>
+              <button onClick=${function() { setShowSamp(true); }} class="text-blue-500 hover:underline">サンプル</button>
+              <span class="text-gray-300">|</span>
+              <button onClick=${function() { setShowUsage(true); }} class="text-blue-500 hover:underline">使用量</button>
+            </div>
+
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center mb-3">
+                <span class="text-sm font-semibold text-gray-700">API設定</span>
+                <${HelpIcon} text=${HELP.api} />
+              </div>
+              <div class="relative mb-2">
+                <input type=${showApi ? 'text' : 'password'} value=${apiKey} onInput=${function(e) { setApiKey(e.target.value); setApiSaved(false); }} placeholder="APIキーを入力" class="w-full px-3 py-2 pr-16 border rounded-lg text-sm" />
+                <button onClick=${function() { setShowApi(!showApi); }} class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">${showApi ? '隠す' : '表示'}</button>
+              </div>
+              <button onClick=${saveApi} class="w-full py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">保存</button>
+              <div class="mt-2 text-xs ${apiSaved ? 'text-green-600' : 'text-amber-600'}">${apiSaved ? '保存済み' : '未保存'}</div>
+            </div>
+
+            <div class="mb-4">
+              <div class="flex items-center mb-2"><span class="text-sm font-semibold text-gray-700">プロジェクト</span></div>
+              <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                ${projects.map(function(p) { return html`<button key=${p.id} onClick=${function() { loadProj(p); }} onContextMenu=${function(e) { e.preventDefault(); delProj(p.id); }} class="flex-shrink-0 px-3 py-2 text-xs rounded-lg border ${curProj && curProj.id === p.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${p.name}</button>`; })}
+                <button onClick=${function() { setShowAddProj(true); }} class="flex-shrink-0 px-3 py-2 text-xs rounded-lg border border-dashed border-gray-300 text-gray-400">+ 新規</button>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('lib'); }} class="flex items-center justify-between w-full text-left">
+                <span class="text-sm font-semibold text-gray-700">キャラクターライブラリ</span>
+                <span class="text-gray-400">${accord.indexOf('lib') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('lib') >= 0 ? 'open' : ''}">
+                <div class="flex gap-2 overflow-x-auto py-2 scrollbar-thin">
+                  ${chars.map(function(c) { return html`<div key=${c.id} class="flex-shrink-0 w-14 cursor-pointer" onContextMenu=${function(e) { e.preventDefault(); delChar(c.id); }}><img src=${c.img} class="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400" onClick=${function() { var idx = selChars.findIndex(function(x) { return x === null; }); if (idx >= 0) { var nc = selChars.slice(); nc[idx] = c; setSelChars(nc); } }} /><div class="text-xs text-center mt-1 truncate">${c.name}</div></div>`; })}
+                  <button onClick=${function() { setShowAddChar(true); }} class="flex-shrink-0 w-14 h-14 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('char'); }} class="flex items-center justify-between w-full text-left">
+                <div class="flex items-center"><span class="text-sm font-semibold text-gray-700">今回のキャラクター</span><${HelpIcon} text=${HELP.character} /></div>
+                <span class="text-gray-400">${accord.indexOf('char') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('char') >= 0 ? 'open' : ''}">
+                <div class="grid grid-cols-4 gap-2 py-2">
+                  ${['説明者*', '相談者', '参考3', '参考4'].map(function(label, idx) { return html`<div key=${idx} class="border-2 ${selChars[idx] ? 'border-blue-400' : 'border-dashed border-gray-300'} rounded-lg p-1"><div class="text-xs text-gray-500 text-center mb-1">${label}</div>${selChars[idx] ? html`<div class="relative"><img src=${selChars[idx].img} class="w-full h-14 object-cover rounded" /><button onClick=${function() { var nc = selChars.slice(); nc[idx] = null; setSelChars(nc); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<div class="h-14 flex items-center justify-center bg-gray-50 rounded cursor-pointer hover:bg-gray-100" onClick=${function() { charRefs.current[idx] && charRefs.current[idx].click(); }}><span class="text-gray-400 text-xs">+</span></div>`}<input ref=${function(el) { charRefs.current[idx] = el; }} type="file" accept="image/*" class="hidden" onChange=${function(e) { handleFile(e, idx); }} /></div>`; })}
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('style'); }} class="flex items-center justify-between w-full text-left">
+                <div class="flex items-center"><span class="text-sm font-semibold text-gray-700">絵のテイスト</span><${HelpIcon} text=${HELP.style} /></div>
+                <span class="text-gray-400">${accord.indexOf('style') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('style') >= 0 ? 'open' : ''}">
+                <div class="max-h-48 overflow-y-auto py-2 scrollbar-thin">
+                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><span class="flex-1 text-sm">${s.name}</span>${s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
+                </div>
+                ${style === 99 && html`<div class="mt-2 p-2 border border-dashed rounded-lg"><div class="text-xs text-gray-500 mb-2">参照画像</div>${styleRef ? html`<div class="relative inline-block"><img src=${styleRef.img} class="h-16 rounded" /><button onClick=${function() { setStyleRef(null); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<button onClick=${function() { styleRefInput.current && styleRefInput.current.click(); }} class="text-sm text-blue-500">+ 画像選択</button>`}<input ref=${styleRefInput} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setStyleRef({ img: ev.target.result }); }; r.readAsDataURL(f); }} /></div>`}
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('speech'); }} class="flex items-center justify-between w-full text-left">
+                <span class="text-sm font-semibold text-gray-700">セリフスタイル</span>
+                <span class="text-gray-400">${accord.indexOf('speech') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('speech') >= 0 ? 'open' : ''}">
+                <div class="flex gap-2 py-2">
+                  <label class="flex-1 flex items-center justify-center p-2 rounded-lg cursor-pointer border-2 ${speech === 'formal' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}"><input type="radio" checked=${speech === 'formal'} onChange=${function() { setSpeech('formal'); }} class="sr-only" /><span class="text-sm">敬語</span></label>
+                  <label class="flex-1 flex items-center justify-center p-2 rounded-lg cursor-pointer border-2 ${speech === 'casual' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}"><input type="radio" checked=${speech === 'casual'} onChange=${function() { setSpeech('casual'); }} class="sr-only" /><span class="text-sm">タメ口</span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('model'); }} class="flex items-center justify-between w-full text-left">
+                <div class="flex items-center"><span class="text-sm font-semibold text-gray-700">モデル選択</span><${HelpIcon} text=${HELP.model} /></div>
+                <span class="text-gray-400">${accord.indexOf('model') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('model') >= 0 ? 'open' : ''}">
+                <div class="space-y-1 py-2">
+                  ${MODELS.map(function(m) { return html`<label key=${m.id} class="flex items-center p-2 rounded-lg cursor-pointer ${model === m.id ? 'bg-blue-50' : 'hover:bg-gray-50'}"><input type="radio" checked=${model === m.id} onChange=${function() { setModel(m.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${m.name}</div><div class="text-xs text-gray-500">${m.price > 0 ? '$' + m.price + '/枚' : '無料'}</div></div></label>`; })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 p-4 md:p-6 overflow-y-auto">
+            <div class="md:hidden flex items-center justify-between mb-4">
+              <button onClick=${function() { setSidebar(true); }} class="text-2xl">☰</button>
+              <h1 class="text-lg font-bold">漫画クリエイター</h1>
+              <div class="w-8"></div>
+            </div>
+
+            <div class="mb-6">
+              <div class="flex items-center mb-2"><span class="text-lg font-semibold text-gray-700">ストーリー・記事内容</span><${HelpIcon} text=${HELP.story} /></div>
+              <textarea value=${story} onInput=${function(e) { setStory(e.target.value); }} placeholder="漫画にしたい内容を入力..." class="w-full h-40 p-4 border rounded-lg resize-y"></textarea>
+              <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>${lastSave ? '自動保存 ' + lastSave.toLocaleTimeString() : ''}</span>
+                <span>${story.length}文字</span>
+              </div>
+            </div>
+
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg flex flex-wrap items-center gap-4">
+              <span class="text-sm text-gray-700">生成枚数</span>
+              <div class="flex gap-2">${[1, 2, 3, 4, 5].map(function(n) { return html`<button key=${n} onClick=${function() { setGenCount(n); }} class="w-10 h-10 rounded-lg border-2 ${genCount === n ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${n}</button>`; })}</div>
+              <div class="text-sm text-gray-600">予想: $${est().usd}（約${est().jpy}円）</div>
+            </div>
+
+            <div class="mb-6">
+              ${isGen ? html`
+                <div class="p-4 bg-blue-50 rounded-lg">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</span>
+                    <button onClick=${function() { cancelRef.current = true; }} class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">停止</button>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
+                  ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
+                </div>
+              ` : html`<button onClick=${generate} disabled=${!apiSaved} class="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-bold rounded-lg disabled:opacity-50">漫画を生成（${genCount}枚）</button>`}
+              ${error && html`<div class="text-red-600 text-sm mt-2 text-center">${error}</div>`}
+            </div>
+
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-semibold text-gray-700">生成された漫画</span>
+                ${genImages.length > 0 && html`<span class="text-sm text-gray-500">${curImg + 1}/${genImages.length}枚</span>`}
+              </div>
+              <div class="bg-gray-100 rounded-lg p-4 min-h-64 flex items-center justify-center cursor-pointer" onClick=${function() { if (genImages[curImg]) { setModalImg(genImages[curImg]); setShowImg(true); } }}>
+                ${genImages.length > 0 ? html`<img src=${genImages[curImg]} class="max-w-full max-h-[500px] rounded-lg shadow-lg" />` : html`<div class="text-gray-400 text-center"><div class="text-4xl mb-2">○</div><div>ここに漫画が表示されます</div></div>`}
+              </div>
+              ${genImages.length > 1 && html`<div class="flex justify-center gap-2 mt-4">${genImages.map(function(_, i) { return html`<button key=${i} onClick=${function() { setCurImg(i); }} class="w-10 h-10 rounded-lg border-2 ${curImg === i ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${i + 1}</button>`; })}</div>`}
+              ${genImages.length > 0 && html`<div class="flex gap-3 mt-4 justify-center"><button onClick=${function() { dl(genImages[curImg], curImg); }} class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg">ダウンロード</button><button onClick=${function() { setGenImages([]); }} class="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg">クリア</button></div>`}
+            </div>
+
+            ${history.length > 0 && html`
+              <div>
+                <div class="flex items-center justify-between mb-2"><span class="text-lg font-semibold text-gray-700">生成履歴</span><button onClick=${function() { setShowHist(true); }} class="text-sm text-blue-500">すべて見る</button></div>
+                <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">${history.slice(0, 5).map(function(h) { return html`<div key=${h.id} class="flex-shrink-0 cursor-pointer relative" onClick=${function() { setHistDet(h); setShowHistDet(true); }}>${favHist.indexOf(h.id) >= 0 && html`<div class="absolute top-1 left-1 text-yellow-500">★</div>`}<img src=${h.img} class="w-20 h-28 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400" /></div>`; })}</div>
+              </div>
+            `}
+          </div>
+
+          <${Modal} isOpen=${showTut} onClose=${function() {}} title="使い方" size="md">
+            <div class="text-center">
+              <div class="flex justify-center gap-1 mb-4">${TUTORIAL.map(function(_, i) { return html`<div key=${i} class="w-3 h-3 rounded-full ${i === tutStep ? 'bg-blue-500' : 'bg-gray-300'}"></div>`; })}</div>
+              <h4 class="text-xl font-bold mb-4">${TUTORIAL[tutStep].title}</h4>
+              <p class="text-gray-700 mb-6 min-h-24 whitespace-pre-wrap">${TUTORIAL[tutStep].content}</p>
+              <div class="flex justify-between">
+                <button onClick=${function() { setTutStep(Math.max(0, tutStep - 1)); }} class="px-4 py-2 text-gray-600" disabled=${tutStep === 0}>← 戻る</button>
+                <button onClick=${compTut} class="px-4 py-2 text-gray-500">スキップ</button>
+                ${tutStep < TUTORIAL.length - 1 ? html`<button onClick=${function() { setTutStep(tutStep + 1); }} class="px-4 py-2 bg-blue-500 text-white rounded-lg">次へ →</button>` : html`<button onClick=${compTut} class="px-4 py-2 bg-blue-500 text-white rounded-lg">始める</button>`}
+              </div>
+            </div>
+          <//>
+
+          <${Modal} isOpen=${showSamp} onClose=${function() { setShowSamp(false); }} title="サンプルギャラリー" size="lg">
+            <p class="text-gray-600 mb-4">このツールで作成できる漫画の例です</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${SAMPLES.map(function(s) { return html`<div key=${s.id} class="border rounded-lg p-3"><div class="bg-gray-200 h-32 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">サンプル画像</div><div class="text-sm font-semibold">${s.title}</div><div class="text-xs text-gray-500">${s.cat}</div></div>`; })}</div>
+          <//>
+
+          <${Modal} isOpen=${showHist} onClose=${function() { setShowHist(false); }} title="生成履歴" size="lg">
+            <div class="grid grid-cols-3 md:grid-cols-4 gap-3">${history.map(function(h) { return html`<div key=${h.id} class="cursor-pointer relative" onClick=${function() { setHistDet(h); setShowHistDet(true); setShowHist(false); }}>${favHist.indexOf(h.id) >= 0 && html`<div class="absolute top-1 left-1 text-yellow-500 z-10">★</div>`}<img src=${h.img} class="w-full h-32 object-cover rounded-lg border-2 border-gray-200" /></div>`; })}</div>
+          <//>
+
+          <${Modal} isOpen=${showHistDet} onClose=${function() { setShowHistDet(false); }} title="詳細" size="lg">
+            ${histDet && html`<div class="flex flex-col md:flex-row gap-4"><div class="flex-1"><img src=${histDet.img} class="w-full rounded-lg cursor-pointer" onClick=${function() { setModalImg(histDet.img); setShowImg(true); }} /></div><div class="flex-1"><h4 class="font-semibold mb-2">生成設定</h4><div class="space-y-2 text-sm"><div>テイスト: ${histDet.settings ? histDet.settings.styleName : '-'}</div><div>セリフ: ${histDet.settings && histDet.settings.speech === 'formal' ? '敬語' : 'タメ口'}</div><div>モデル: ${histDet.settings ? histDet.settings.modelName : '-'}</div><div>日時: ${new Date(histDet.ts).toLocaleString()}</div></div><div class="flex gap-2 mt-4"><button onClick=${function() { toggleFavHist(histDet.id); }} class="px-3 py-2 border rounded-lg ${favHist.indexOf(histDet.id) >= 0 ? 'border-yellow-500 bg-yellow-50' : ''}">${favHist.indexOf(histDet.id) >= 0 ? '★ 解除' : '☆ 登録'}</button><button onClick=${function() { dl(histDet.img, 0); }} class="px-3 py-2 bg-blue-500 text-white rounded-lg">DL</button></div></div></div>`}
+          <//>
+
+          <${Modal} isOpen=${showUsage} onClose=${function() { setShowUsage(false); }} title="使用量" size="md">
+            <div class="space-y-4">
+              <div><h4 class="font-semibold mb-2">今月</h4><div class="bg-gray-50 rounded-lg p-4"><div class="text-2xl font-bold">${mu.count}枚</div><div class="text-gray-600">推定: $${mu.cost.toFixed(2)}</div></div></div>
+              <div><h4 class="font-semibold mb-2">累計</h4><div class="bg-gray-50 rounded-lg p-4"><div class="flex justify-between"><span>総枚数</span><span class="font-bold">${usage.total ? usage.total.count : 0}枚</span></div><div class="flex justify-between"><span>累計</span><span class="font-bold">$${usage.total ? usage.total.cost.toFixed(2) : '0.00'}</span></div></div></div>
+            </div>
+          <//>
+
+          <${Modal} isOpen=${showAddChar} onClose=${function() { setShowAddChar(false); setNewCharName(''); setNewCharImg(null); }} title="キャラクター追加" size="sm">
+            <input type="text" value=${newCharName} onInput=${function(e) { setNewCharName(e.target.value); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <div class="border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer" onClick=${function() { fileRef.current && fileRef.current.click(); }}>${newCharImg ? html`<img src=${newCharImg} class="max-h-32 mx-auto rounded" />` : html`<div class="text-gray-400"><div class="text-3xl mb-2">+</div><div>画像を選択</div></div>`}</div>
+            <input ref=${fileRef} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setNewCharImg(ev.target.result); }; r.readAsDataURL(f); }} />
+            <div class="flex gap-3"><button onClick=${function() { setShowAddChar(false); setNewCharName(''); setNewCharImg(null); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${addChar} disabled=${!newCharName || !newCharImg} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">追加</button></div>
+          <//>
+
+          <${Modal} isOpen=${showAddProj} onClose=${function() { setShowAddProj(false); setNewProjName(''); }} title="プロジェクト保存" size="sm">
+            <p class="text-sm text-gray-600 mb-4">現在の設定を保存します</p>
+            <input type="text" value=${newProjName} onInput=${function(e) { setNewProjName(e.target.value); }} placeholder="プロジェクト名" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <div class="flex gap-3"><button onClick=${function() { setShowAddProj(false); setNewProjName(''); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${saveProj} disabled=${!newProjName} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">保存</button></div>
+          <//>
+
+          <${Modal} isOpen=${showImg} onClose=${function() { setShowImg(false); }} title="プレビュー" size="full">
+            <div class="flex items-center justify-center"><img src=${modalImg} class="max-w-full max-h-[80vh] rounded-lg" /></div>
+          <//>
+
+          <${Modal} isOpen=${showDraft} onClose=${function() { setShowDraft(false); }} title="下書きが見つかりました" size="sm">
+            <p class="text-gray-600 mb-4">前回の作業内容を復元しますか？</p>
+            ${draft && html`<div class="bg-gray-50 rounded-lg p-3 mb-4 text-sm"><div class="text-gray-500">保存: ${new Date(draft.ts).toLocaleString()}</div><div class="text-gray-700 mt-1 truncate">「${draft.story ? draft.story.substring(0, 50) : ''}...」</div></div>`}
+            <div class="flex gap-3"><button onClick=${function() { setShowDraft(false); localStorage.removeItem('manga_draft'); }} class="flex-1 py-2 border rounded-lg">破棄</button><button onClick=${restoreDraft} class="flex-1 py-2 bg-blue-500 text-white rounded-lg">復元</button></div>
+          <//>
+        </div>
+      `;
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(App));
+  </script>
+</body>
+</html>
