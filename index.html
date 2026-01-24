@@ -148,6 +148,8 @@
       var s39 = useState(''); var newCharName = s39[0], setNewCharName = s39[1];
       var s40 = useState(null); var newCharImg = s40[0], setNewCharImg = s40[1];
       var s41 = useState(''); var newProjName = s41[0], setNewProjName = s41[1];
+      var s42 = useState({ step1: '', step2: '' }); var promptTemplates = s42[0], setPromptTemplates = s42[1];
+      var s43 = useState(''); var generationStep = s43[0], setGenerationStep = s43[1];
 
       var fileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
@@ -179,6 +181,30 @@
             if (dd.story && dd.story.length > 0) { setDraft(dd); setShowDraft(true); }
           }
         } catch(e) { console.error(e); }
+      }, []);
+
+      // プロンプトテンプレート読み込み
+      useEffect(function() {
+        function loadPrompts() {
+          fetch('./prompt_step1.txt')
+            .then(function(res) { return res.text(); })
+            .then(function(txt) {
+              return fetch('./prompt_step2.txt')
+                .then(function(res) { return res.text(); })
+                .then(function(txt2) {
+                  setPromptTemplates({ step1: txt, step2: txt2 });
+                  console.log('プロンプトテンプレートを読み込みました');
+                });
+            })
+            .catch(function(e) {
+              console.error('プロンプトファイルの読み込みに失敗:', e);
+              setPromptTemplates({
+                step1: getDefaultPromptStep1(),
+                step2: getDefaultPromptStep2()
+              });
+            });
+        }
+        loadPrompts();
       }, []);
 
       // 下書き自動保存
@@ -245,6 +271,25 @@
         r.readAsDataURL(f);
       }
 
+      // デフォルトプロンプト
+      function getDefaultPromptStep1() {
+        return 'あなたは漫画制作のプロンプトエンジニアです。\n以下のストーリー内容を分析し、4コマ漫画を生成するための詳細な画像生成プロンプトを作成してください。\n\n【出力形式】\n各コマごとに詳細を明記してください。\n\n---\n【ストーリー内容】\n{{STORY}}';
+      }
+
+      function getDefaultPromptStep2() {
+        return '以下の指示に従って4コマ漫画を生成してください。\n\n{{GENERATED_PROMPT}}\n\n【画像全体の条件】\n・縦長1枚画像、アスペクト比 2:3\n・4K高解像度、カラー漫画';
+      }
+
+      // 変数置換
+      function replaceVars(template, vars) {
+        var result = template;
+        Object.keys(vars).forEach(function(key) {
+          var regex = new RegExp('{{' + key + '}}', 'g');
+          result = result.replace(regex, vars[key]);
+        });
+        return result;
+      }
+
       function genPrompt() {
         var st = STYLES.find(function(s) { return s.id === style; });
         var hasC = selChars[1] !== null;
@@ -255,6 +300,112 @@
         return (hasC ? '2人' : '1人') + 'のキャラクターが会話形式で語るマンガを生成してください。\n\n【絵のテイスト】\n' + spt + '\n\n【セリフスタイル】\n' + spch + '\n\n' + charRule + '\n\n' + refTxt + '\n\n【画像条件】\n・縦長1枚、アスペクト比 2:3\n・上から縦に4コマ構成\n・日本語は縦書き、右から左\n・カラーのみ\n\n---\n【記事内容】\n' + story;
       }
 
+      // Step 1: 詳細プロンプト生成
+      function generateDetailedPrompt() {
+        var st = STYLES.find(function(s) { return s.id === style; });
+        var hasC = selChars[1] !== null;
+
+        var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
+        var spch = speech === 'formal'
+          ? '【セリフ・語尾のバリエーション（重要）】\n・敬語（です・ます調）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜ですか？／〜でしょうか）\n　説明系（〜なんです／〜ております）\n　展開系（〜ですが、／実は〜／つまり〜）\n　強調系（〜なのです／〜と言えます）\n　締め系（〜しましょう／〜してみてください）'
+          : '【セリフ・語尾のバリエーション（重要）】\n・タメ口（だ・である調、カジュアル）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜だよね？／〜じゃない？／〜かな？）\n　説明系（〜なんだ／〜だよ／〜ってこと）\n　展開系（〜だけど、／実は〜／つまり〜）\n　強調系（〜なんだよ！／〜だって！）\n　締め系（〜しよう／〜してみて／〜だね）\n・親しみやすく、フレンドリーなトーンで';
+
+        var charRule = hasC
+          ? '【キャラクター人数ルール】\n・メインの登場人物は2人（デザインは参考画像に従う）\n・1枚目の画像のキャラクター：説明役\n・2枚目の画像のキャラクター：相談者役\n・相談者は絶対に説明をさせないでください\n・背景内の説明用イメージ人物（歴史的人物など）は別扱い\n\n【キャラクター登場ルール】\n・1コマに2人が登場しなくてもいい\n・1コマに説明者のみ、相談者のみでもいい'
+          : '【キャラクター人数ルール】\n・登場人物は1人のみ（参考画像のキャラクター）\n・読者に語りかける形式で進行\n・独白・説明形式で内容を伝える';
+
+        var prompt1 = replaceVars(promptTemplates.step1, {
+          STORY: story,
+          STYLE_PROMPT: spt,
+          SPEECH_STYLE: spch,
+          CHARACTER_RULE: charRule
+        });
+
+        var body = {
+          contents: [{ parts: [{ text: prompt1 }] }]
+        };
+        console.log("===== prompt1 =====");
+        console.log(prompt1);
+
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        .then(function(res) {
+          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Step 1 API error'); });
+          return res.json();
+        })
+        .then(function(data) {
+          var txt = '';
+          if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+            txt = data.candidates[0].content.parts[0].text || '';
+          }
+          console.log('生成されたプロンプト:', txt);
+          return txt;
+        });
+      }
+
+      // Step 2: 画像生成
+      function generateImageFromPrompt(detailedPrompt) {
+        var st = STYLES.find(function(s) { return s.id === style; });
+        var hasC = selChars[1] !== null;
+        var m = MODELS.find(function(x) { return x.id === model; });
+
+        var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
+        var charCountText = hasC ? '2人のキャラクター' : '1人のキャラクター';
+        var charDesc = hasC
+          ? '【キャラクター人数ルール】\n・メインの登場人物は2人（デザインは参考画像に従う）\n・1枚目の画像のキャラクター：説明役\n・2枚目の画像のキャラクター：相談者役\n・相談者は絶対に説明をさせないでください\n\n【キャラクター登場ルール】\n・1コマに2人が登場しなくてもいい\n・1コマに説明者のみ、相談者のみでもいい'
+          : '【キャラクター人数ルール】\n・登場人物は1人のみ（参考画像のキャラクター）\n・読者に語りかける形式で進行';
+
+        var prompt2 = replaceVars(promptTemplates.step2, {
+          CHARACTER_COUNT: charCountText,
+          STYLE_PROMPT: spt,
+          CHARACTER_DESCRIPTION: charDesc,
+          GENERATED_PROMPT: detailedPrompt
+        });
+
+        var parts = [];
+        selChars.forEach(function(c) {
+          if (c && c.img) {
+            var b = c.img.split(',')[1];
+            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+          }
+        });
+        if (style === 99 && styleRef && styleRef.img) {
+          var b = styleRef.img.split(',')[1];
+          parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+        }
+
+        var body = {
+          system_instruction: { parts: [{ text: prompt2 }] },
+          contents: [{ parts: parts }],
+          generationConfig: { responseModalities: ['IMAGE'] }
+        };
+        console.log("===== prompt2 =====");
+        console.log(prompt2);
+
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        .then(function(res) {
+          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Step 2 API error'); });
+          return res.json();
+        })
+        .then(function(data) {
+          var img = null;
+          if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+            data.candidates[0].content.parts.forEach(function(p) {
+              if (p.inlineData) img = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
+            });
+          }
+          return img;
+        });
+      }
+
+      // メイン生成関数（2段階処理）
       function generate() {
         if (!apiKey) { setError('APIキーを設定してください'); return; }
         if (!selChars[0]) { setError('説明者を選択してください'); return; }
@@ -265,56 +416,39 @@
         setGenImages([]);
         setCurImg(0);
         cancelRef.current = false;
-        
+        setGenerationStep('');
+
         var m = MODELS.find(function(x) { return x.id === model; });
         var currentImages = [];
 
         function generateOne(i) {
-          if (i >= genCount || cancelRef.current) { setIsGen(false); return; }
-          setGenIdx(i);
-          
-          var parts = [];
-          selChars.forEach(function(c) {
-            if (c && c.img) {
-              var b = c.img.split(',')[1];
-              parts.push({ inlineData: { mimeType: 'image/png', data: b } });
-            }
-          });
-          if (style === 99 && styleRef && styleRef.img) {
-            var b = styleRef.img.split(',')[1];
-            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+          if (i >= genCount || cancelRef.current) {
+            setIsGen(false);
+            setGenerationStep('');
+            return;
           }
+          setGenIdx(i);
 
-          var body = {
-            system_instruction: { parts: [{ text: genPrompt() }] },
-            contents: [{ parts: parts.concat([{ text: story }]) }],
-            generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
-          };
+          // Step 1: プロンプト生成
+          setGenerationStep('prompt');
+          generateDetailedPrompt()
+            .then(function(detailedPrompt) {
+              if (cancelRef.current) throw new Error('キャンセルされました');
 
-          fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-          })
-          .then(function(res) {
-            if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'API error'); });
-            return res.json();
-          })
-          .then(function(data) {
-            var img = null;
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-              data.candidates[0].content.parts.forEach(function(p) {
-                if (p.inlineData) img = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
-              });
-            }
-            if (img) {
+              // Step 2: 画像生成
+              setGenerationStep('image');
+              return generateImageFromPrompt(detailedPrompt);
+            })
+            .then(function(img) {
+              if (!img) throw new Error('画像の生成に失敗しました');
+
               currentImages = currentImages.concat([img]);
               setGenImages(currentImages.slice());
               setCurImg(i);
 
               var st = STYLES.find(function(s) { return s.id === style; });
               var hi = { id: 'g_' + Date.now() + '_' + i, img: img, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
-              
+
               try {
                 var savedHist = localStorage.getItem('manga_history');
                 var histArr = savedHist ? JSON.parse(savedHist) : [];
@@ -336,10 +470,15 @@
                 localStorage.setItem('manga_usage', JSON.stringify(usageData));
                 setUsage(usageData);
               } catch(e) {}
-            }
-            generateOne(i + 1);
-          })
-          .catch(function(e) { setError('エラー: ' + e.message); setIsGen(false); });
+
+              setGenerationStep('');
+              generateOne(i + 1);
+            })
+            .catch(function(e) {
+              setError('エラー: ' + e.message);
+              setIsGen(false);
+              setGenerationStep('');
+            });
         }
         generateOne(0);
       }
@@ -544,10 +683,26 @@
               ${isGen ? html`
                 <div class="p-4 bg-blue-50 rounded-lg">
                   <div class="flex items-center justify-between mb-2">
-                    <span class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</span>
+                    <div>
+                      <div class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</div>
+                      ${generationStep && html`<div class="text-sm text-blue-700 mt-1">${generationStep === 'prompt' ? 'Step 1: プロンプト生成中...' : generationStep === 'image' ? 'Step 2: 漫画生成中...' : ''}</div>`}
+                    </div>
                     <button onClick=${function() { cancelRef.current = true; }} class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">停止</button>
                   </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
+                  <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full transition-all" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
+                  ${generationStep && html`
+                    <div class="mt-2 flex items-center gap-2 text-xs text-blue-600">
+                      <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 rounded-full ${generationStep === 'prompt' ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}"></div>
+                        <span>プロンプト生成</span>
+                      </div>
+                      <span>→</span>
+                      <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 rounded-full ${generationStep === 'image' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'}"></div>
+                        <span>漫画生成</span>
+                      </div>
+                    </div>
+                  `}
                   ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
                 </div>
               ` : html`<button onClick=${generate} disabled=${!apiSaved} class="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-bold rounded-lg disabled:opacity-50">漫画を生成（${genCount}枚）</button>`}
