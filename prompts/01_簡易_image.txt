@@ -1,0 +1,373 @@
+Generate a 4-panel vertical manga (4-koma) following these specifications:
+
+---
+【IMAGE SPECIFICATIONS】
+- Aspect ratio: 2:3 (vertical)
+- Resolution: 4K (high resolution)
+- Layout: 4 panels stacked vertically
+- Style: Color manga only (no black and white)
+- Panel borders clearly defined
+
+---
+【CRITICAL: REFERENCE IMAGE FIDELITY - HIGHEST PRIORITY】
+⚠️ THIS IS THE MOST IMPORTANT REQUIREMENT - Must be executed perfectly:
+
+If a reference image is provided:
+- Faithfully reproduce the character design and art style
+- Accurately maintain: facial features, hairstyle, hair color, clothing, line weight, coloring, color tone
+- Do not add excessive personal interpretation or modifications
+- Character appearance must remain consistent across all panels
+- The reference image defines the visual identity - follow it precisely
+
+⚠️ CRITICAL CONSISTENCY REQUIREMENT:
+When generating multiple images in sequence, maintain ABSOLUTE CONSISTENCY:
+- Use IDENTICAL art style, line weight, coloring technique across ALL generations
+- Character design must remain EXACTLY the same in every image
+- Color palette, saturation levels, contrast must be CONSISTENT
+- Background rendering style must be UNIFORM
+- Do NOT introduce style variations between sequential generations
+- Treat this as a continuous series requiring perfect visual coherence
+
+---
+【CRITICAL: JAPANESE TEXT RENDERING - SECOND HIGHEST PRIORITY】
+⚠️ THIS IS CRITICALLY IMPORTANT - Must be executed perfectly:
+
+■ Language & Script Requirements
+- ALL speech bubbles MUST contain Japanese text (日本語のみ)
+- Use authentic Japanese hiragana (ひらがな), katakana (カタカナ), and kanji (漢字) characters
+- ABSOLUTELY NO English text, NO romanization, NO placeholder text like "[Japanese text]"
+- Every speech bubble must display real, readable Japanese characters
+
+■ Writing Direction & Layout
+- Vertical writing (縦書き) - text flows from top to bottom
+- Reading order: Right to left (右→左)
+- Each character must be stacked vertically in columns
+- Multiple columns read from right to left
+
+■ Text Quality Standards
+- Characters must be crystal clear, perfectly legible, and properly formed
+- Professional manga-style font rendering
+- Appropriate font size for speech bubbles (readable but not oversized)
+- Natural Japanese spacing and line breaks
+- Sharp, clean character rendering (not blurry or distorted)
+
+■ Speech Bubble Integration
+- Text must be properly positioned within speech bubbles
+- Bubble shapes: Normal speech → Round, Thought → Cloud-shaped, Surprise → Spiky
+- Text placement follows reading order (top-right → bottom-left)
+- Maximum 2 bubbles per panel
+
+---
+【ART STYLE AND COLORING】
+🎨 CRITICAL - THIS IS YOUR PRIMARY DIRECTIVE - ALWAYS ACTIVE:
+
+{{STYLE_PROMPT}}
+
+⚠️ MANDATORY APPLICATION RULES:
+- This art style MUST be applied to ALL 4 panels without exception
+- This art style defines HOW you draw everything: characters, backgrounds, objects, effects
+- Apply FULL stylistic exaggeration and characteristics as specified above
+- User content specifications (dialogue, backgrounds, etc.) tell you WHAT to include, but THIS STYLE controls HOW you render them
+- NEVER reduce or simplify this style for any reason
+- If the style calls for bold exaggeration, use it. If it calls for delicate details, use them. If it calls for dramatic effects, use them.
+
+Additional style requirements:
+- Clear, defined lines with strong outlines (as appropriate to the selected style)
+- Vivid, saturated colors (not washed out or hazy, unless the selected style specifically calls for soft/muted tones)
+- Strong contrast with sharp definition (as characteristic of the selected style)
+- Use shadows and highlights for depth (stylized according to the selected art style)
+- Never pale, faded, or low-contrast finish (unless specifically part of the selected style aesthetic)
+- Professional manga-quality rendering with full commitment to the selected style
+
+🔁 REMINDER: This style applies to EVERYTHING you draw in ALL panels, regardless of any other specifications.
+
+---
+【CHARACTER DETAILS】
+{{CHARACTER_COUNT}}
+{{CHARACTER_DESCRIPTION}}
+
+---
+【SPEECH RULES】
+{{SPEECH_STYLE}}
+
+■ Character Count Guidelines (for character-present panels)
+- 1 speech bubble: 20-25 characters recommended
+- 2 speech bubbles: 30-35 characters total (e.g., 18+17)
+- Maximum per bubble: 25 characters
+- Maximum per panel: 35 characters
+- Total across character-present panels: 70-90 characters (ideal: 75-85)
+
+■ Speech Distribution (for 2-character setup)
+- Explainer: ~70% of total dialogue
+- Questioner: ~30% of total dialogue
+- Explainer provides main information, questioner asks questions and responds
+
+■ Dialogue Variety Requirements
+- Do NOT repeat the same content across panels (even with different wording)
+- Vary sentence endings across all 4 panels
+- Avoid overly explanatory long sentences
+- Stay true to the story - no exaggeration or added facts
+
+■ Techniques for Adequate Character Count
+- Expand short questions: "幸せって何？" → "幸せって一体何なんだろう？"
+- Add specific details: "時代で変わる" → "時代や文化によって大きく変わってくるものなんだ"
+
+---
+【CHARACTER-ABSENT PANELS】
+{{CHARACTER_RULE}}
+
+■ Five Panel Types to Choose From:
+
+**Type A - 概念のイメージカット (Concept Visualization)**
+- Visual metaphors for abstract concepts
+- Use symbolic imagery, silhouettes, light/shadow effects
+- Examples: happiness → warm light embracing family silhouettes, growth → seedling to tree
+- When to use: Philosophical themes, abstract concept explanations
+
+**Type B - 手元・部分のクローズアップ (Hand/Object Close-up)**
+- Focus on specific objects or detailed actions
+- Show hands with items, device screens, documents
+- Examples: hand signing paper, smartphone screen, fingers holding photo
+- When to use: Before/after important actions, presenting key items
+
+**Type C - 図解・ダイアグラム (Diagram/Infographic)**
+- Structured information visualization
+- Use charts, graphs, timelines, comparison tables, flowcharts
+- Examples: pie chart (past 70% family vs present 50% individual), historical timeline
+- When to use: Comparing multiple elements, explaining processes, showing relationships
+
+**Type D - 吹き出しなし＋背景・風景 (Landscape without Speech)**
+- Show location, setting, or atmosphere
+- Depict specific places or time period ambiance
+- Examples: sunset park, busy office, quiet library, Showa-era street
+- When to use: Scene transitions, establishing time period, reflecting emotions
+
+**Type E - たとえ話のビジュアル化 (Metaphor Visualization)**
+- Illustrate analogies mentioned in the story
+- Directly visualize comparisons from the narrative
+- Examples: "life is a voyage" → ship in storm vs calm harbor
+- When to use: Following metaphorical expressions, explaining concepts through examples
+
+■ Panel Selection Guidelines
+- If story has comparison/contrast → C (Diagram) or A (Concept)
+- If specific object/action is important → B (Close-up)
+- If location/era is important → D (Landscape)
+- If metaphor is used in story → E (Metaphor visualization)
+
+■ Examples of Good vs Bad
+× Bad: "価値観の変遷" (too abstract, works for any story)
+○ Good: "幸せの基準：家族の安定→個人の成長" with specific visual comparison
+× Bad: Generic graph unrelated to story
+○ Good: Story-specific comparison showing exact elements mentioned
+
+---
+【PANEL COMPOSITION RULES - MANDATORY VARIETY】
+
+■ Camera Angle Variety (MUST use at least 3 different angles across 4 panels)
+Choose from these 6 angle types:
+1. Front view - Direct eye contact, standard angle
+2. 3/4 view (45-degree) - Natural, dynamic angle with slight side view
+3. Profile (Side view) - Shows emotional changes, contemplative moments
+4. Bird's eye view (Overhead) - Looking down, shows overall situation
+5. Low angle (Worm's eye) - Looking up, emphasizes importance or power
+6. Back view - Character facing away, thinking or gazing
+
+■ Camera Distance Variety (MUST use at least 3 different distances across 4 panels)
+Choose from these 5 distance types:
+1. Close-up - Face only, shows subtle expression changes
+2. Bust shot - Upper body from chest up, good for conversation
+3. Waist shot - From waist up, shows gestures and body language
+4. Full body - Entire character, shows movement and full posture
+5. Wide shot - Character with environment, establishes location
+
+■ Expression Variety
+- Change facial expressions to match panel emotion
+- Options: Confusion / Anxiety / Serious / Realization / Relief / Smile / Understanding
+
+■ CRITICAL - DO NOT:
+× Use the same angle for all panels (variation is MANDATORY)
+× Use the same expression for all panels
+× Use the same camera distance for all panels
+× Create monotonous compositions
+
+---
+【BACKGROUND RULES - MANDATORY VARIETY】
+
+■ Use at least 3 different background types across 4 panels:
+
+Type A - Location/Scene: Study room, office, natural scenery
+Type B - Conceptual Image: Historical figures, abstract concepts
+Type C - Infographic: Charts, flow diagrams, icons
+Type D - Light Effects: Sparkles, radial light (for realization moments)
+Type E - Nature/Seasonal: Cherry blossoms, blue sky, sunlight through trees
+
+**Note**: For styles with inherent constraints (limited color palettes, monochrome techniques, minimalist aesthetics), achieve background variety through composition, lighting, shapes, and negative space rather than color variation. Style integrity takes priority over color-based variety.
+
+■ Emotion-Background Matching:
+- Anxiety/Confusion → Calm gray tones, muted colors
+- Surprise/Discovery → Radial light burst, bright highlights
+- Understanding → Sparkle effects, organized diagrams
+- Relief/Hope → Natural scenery, open sky, warm colors
+
+■ DO NOT:
+× Use plain white or simple gradient for all 4 panels
+× Use identical backgrounds throughout
+
+---
+【STORY CONTENT】
+{{STORY}}
+
+---
+⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS - SECOND PRIORITY
+
+If the story content contains specific panel-by-panel instructions using markers like 【パネル1】, 【パネル2】, [Panel 1], etc., you MUST follow them with 100% FIDELITY:
+
+🎨 MANDATORY: Art Style Application (NON-NEGOTIABLE)
+Before following ANY user specifications below, you MUST understand this hierarchy:
+
+**PRIORITY #1 - ART STYLE (HOW to draw) - ALWAYS APPLIED, NEVER OVERRIDE:**
+- The art style from {{STYLE_PROMPT}} is MANDATORY and applies to EVERY SINGLE PANEL
+- Art style defines: drawing technique, line weight, coloring method, exaggeration level, visual aesthetic
+- Art style is THE FOUNDATION - it controls HOW everything is rendered
+- User specifications CANNOT override, modify, or reduce the art style application
+- Even if user specifies "simple office background", render it in the FULL selected art style with all its characteristics
+
+**PRIORITY #2 - USER CONTENT (WHAT to draw) - Follow exactly within the art style:**
+- User specifications define CONTENT ONLY: which objects, which words, which scenes
+- User specs tell you WHAT to include, NOT how to draw it
+- ALWAYS render user-specified content using the FULL art style from {{STYLE_PROMPT}}
+
+**HOW THEY WORK TOGETHER:**
+- User says "Background: office" → Draw an office IN THE SELECTED ART STYLE (exaggerated, stylized, with all style characteristics)
+- User says "Speech: こんにちは" → Use exact text "こんにちは" BUT render the bubble/lettering IN THE SELECTED ART STYLE
+- User says "Expression: happy" → Show happy expression WITH FULL STYLISTIC EXAGGERATION from {{STYLE_PROMPT}}
+
+■ What to Follow Exactly (CONTENT specifications):
+- Specified dialogue/speech (セリフ/Speech): Use EXACTLY as written, word for word (but render in selected art style)
+- Specified background (背景/Background): Reproduce EXACTLY as described (but draw in selected art style)
+- Specified scene/setting (シーン/Scene): Follow EXACTLY (but render in selected art style)
+- Specified character presence/absence (キャラ/Character): Follow EXACTLY (but draw in selected art style)
+- Specified panel type (タイプ/Type): Follow EXACTLY (but render in selected art style)
+- Specified camera angles/distance: Follow EXACTLY (but render in selected art style)
+- Specified emotions/expressions: Follow EXACTLY (but exaggerate in selected art style)
+- Any other explicit CONTENT instructions: Follow EXACTLY (but render in selected art style)
+
+■ What to Create:
+- Only fill in CONTENT aspects that are NOT specified
+- If dialogue is given, use it verbatim - do NOT rephrase
+- If background is described, include those exact elements - do NOT add elements not mentioned
+- Creative freedom applies ONLY to unspecified CONTENT elements
+- ALWAYS apply the full art style regardless of what content is specified
+
+⚠️ CRITICAL REMINDER: Art Style is ALWAYS Active
+- Do NOT reduce exaggeration because user specified a background
+- Do NOT simplify the style because user specified dialogue
+- Do NOT make the art more "realistic" or "plain" when following user specs
+- User specifications = WHAT to draw | Art style = HOW to draw it
+- These are TWO DIFFERENT DIMENSIONS that work together simultaneously
+
+■ Examples of Correct Application:
+✓ User says: 背景:オフィス会議室 | {{STYLE_PROMPT}}=Pop art style
+  → Draw office meeting room with bold colors, halftone dots, thick outlines, dramatic shadows (full pop art style)
+✓ User says: セリフ:「今日は晴れ」 | {{STYLE_PROMPT}}=Retro shoujo manga
+  → Use exact text "今日は晴れ" in a decorative bubble with sparkles, flowers, soft shading (full retro shoujo style)
+✓ User says: 表情:驚き | {{STYLE_PROMPT}}=Gag manga style
+  → Show surprise with EXTREME exaggeration, bulging eyes, speed lines, distorted face (full gag manga style)
+
+■ Examples of WRONG Application:
+✗ User specified "office" so I'll draw it simply and realistically → NO! Draw it in the FULL selected art style
+✗ User specified exact dialogue so I'll make the panel plain → NO! Apply FULL art style to everything
+✗ User gave specific instructions so I'll reduce stylistic exaggeration → NO! ALWAYS use full style
+
+---
+⚠️ ABSOLUTE RULE: NEVER SACRIFICE ART STYLE FOR CONTENT ACCURACY
+- You can be 100% accurate to user content specifications AND 100% faithful to art style simultaneously
+- User content specs = WHAT elements appear | Art style = HOW they're rendered
+- If you find yourself thinking "I should simplify the style to follow user specs accurately" - STOP. You're wrong.
+- The correct approach: "I will include exactly what user specified, rendered in the FULL selected art style"
+
+---
+【PANEL CREATION INSTRUCTIONS】
+
+Based on the story above, create a 4-panel manga following these steps:
+
+1. **Analyze the Story**
+   - Identify the core theme and key points
+   - Determine emotional flow across 4 panels
+   - Plan where character-absent panel works best (recommend panel 2 or 3)
+
+2. **Design Speech Content**
+   - Write Japanese dialogue for character-present panels
+   - Total character-present dialogue: 70-90 characters (ideal: 75-85)
+   - Follow distribution: explainer 70%, questioner 30%
+   - Ensure variety - no repeated content
+   - Use story-specific keywords
+
+3. **Plan Character-Absent Panels**
+   - Select 1 panel for character-absent treatment
+   - Choose appropriate type from A-E based on story content
+   - Create story-specific titles (10 chars max)
+   - Design visuals reflecting specific story elements
+
+4. **Vary Composition**
+   - Use at least 3 different camera angles
+   - Use at least 3 different camera distances
+   - Change expressions to match emotions
+   - Use at least 3 different background types
+
+5. **Render the Final Image**
+   - 4 panels stacked vertically, 2:3 aspect ratio, 4K resolution
+   - Faithfully follow reference image character design (if provided)
+   - Render Japanese text clearly in vertical writing (top-to-bottom, right-to-left)
+   - Apply selected art style consistently
+   - Ensure vivid colors and strong contrast
+   - Define panel borders clearly
+
+---
+【STYLE PRIORITY】
+
+When style-specific requirements conflict with general guidelines:
+- Art style characteristics take HIGHEST priority
+- Maintain authentic style integrity (color limits, techniques, aesthetics)
+- Adapt variety requirements to work within style constraints
+- Example: Minimalist styles achieve variety through composition, not color
+- Example: Retro manga may use screen tone techniques even in color context
+- Example: Webtoon-style language refers to aesthetic, not actual scroll format
+
+---
+【CRITICAL REQUIREMENTS - FINAL CHECKLIST】
+
+Before generating, verify:
+✓ Reference image character design faithfully reproduced (if provided)
+✓ All speech bubbles contain authentic Japanese text (hiragana, katakana, kanji)
+✓ Text is vertical (top to bottom) and reads right to left
+✓ Characters are clear, legible, and properly formed
+✓ Character design is consistent across all panels
+✓ 1 panel without character (with story-specific content)
+✓ Character-present panels total 70-90 characters
+✓ At least 3 different camera angles used
+✓ At least 3 different camera distances used
+✓ At least 3 different background types used
+✓ Panel borders are clearly defined
+✓ 4 panels stacked vertically in 2:3 aspect ratio
+
+【DO NOT】
+× Use English text or romanization instead of Japanese
+× Write "[Japanese text]" or any placeholder text
+× Change character's clothing or hairstyle between panels
+× Use excessive comedic exaggeration (sweat drops, deformed faces)
+× Write sound effects as text (like "キラキラ")
+× Create black and white manga
+× Use generic, non-story-specific content in character-absent panels
+× Use blurry, unclear, or poorly rendered Japanese characters
+× Deviate from reference image character design (if provided)
+× Create monotonous compositions with identical angles/distances/backgrounds
+× Repeat the same dialogue content across panels
+
+---
+FINAL REMINDER:
+#1 Priority: ALWAYS apply the FULL art style from {{STYLE_PROMPT}} to EVERY panel, regardless of any user content specifications. Art style is HOW you draw, user specs are WHAT you draw. They work together, never in conflict.
+#2 Priority: If reference image provided, faithfully reproduce the character design (rendered in the selected art style).
+#3 Priority: Japanese text rendering - every speech bubble must display clear, readable Japanese characters in vertical writing format (styled according to the selected art style).
+#4 Priority: Follow user-specified content (dialogue, backgrounds, scenes) EXACTLY as written, but ALWAYS render them using the FULL selected art style with all its exaggeration and stylistic characteristics.
+#5 Priority: Ensure variety in composition (angles, distances, backgrounds) and story-specific character-absent panels.

@@ -34,16 +34,16 @@
 
     // 定数
     var STYLES = [
-      { id: 1, name: 'ビジネス説明マンガ風', desc: 'パステルカラーで信頼感のある企業向け', prompt: 'Japanese business explainer manga style. Pastel colors (pink, light purple, pale blue). Professional and trustworthy atmosphere.' },
-      { id: 2, name: '少年漫画風', desc: '太い線と力強い表現', prompt: 'Japanese shonen manga style. Dynamic lines, bold colors, energetic atmosphere with impact lines.' },
-      { id: 3, name: '少女漫画風', desc: '繊細な線とキラキラ効果', prompt: 'Japanese shoujo manga style. Soft lines, sparkly effects, romantic atmosphere with flower motifs.' },
-      { id: 4, name: 'シンプル線画風', desc: 'ミニマルでスッキリ', prompt: 'Minimalist line art style. Clean black outlines with flat colors. Simple and modern.' },
-      { id: 5, name: 'アメコミ風', desc: 'ポップで派手な色使い', prompt: 'American comic book style. Bold outlines, vibrant colors, halftone dots, pop art influenced.' },
-      { id: 6, name: '水彩イラスト風', desc: '柔らかく芸術的', prompt: 'Watercolor illustration style. Soft edges, blended colors, artistic and gentle atmosphere.' },
-      { id: 7, name: 'レトロ漫画風', desc: '昭和の懐かしい雰囲気', prompt: 'Retro Japanese manga style (1970s-80s). Nostalgic coloring, classic screen tones, vintage aesthetic.' },
-      { id: 8, name: 'Webtoon風', desc: '現代的でクリーン', prompt: 'Korean webtoon style. Clean digital art, soft shading, modern character designs, bright colors.' },
-      { id: 9, name: '絵本イラスト風', desc: '温かみのある丸い絵柄', prompt: 'Picture book illustration style. Warm, friendly, rounded shapes, gentle colors.' },
-      { id: 10, name: 'クール・スタイリッシュ風', desc: 'モノトーン基調でおしゃれ', prompt: 'Cool stylish manga style. Monochromatic base with accent colors, sophisticated urban aesthetic.' },
+      { id: 1, name: 'ビジネス説明マンガ風', desc: '企業向けビジネス書・まんがでわかる○○シリーズの優しいタッチ', prompt: 'Japanese josei manga illustration style for business books. Soft natural color palette with warm beige skin tones and natural brown hair. Delicate thin linework with subtle line weight variation. Soft gradient shading, not cel-shaded. Realistic proportions with slightly large but natural-looking eyes. Clean, professional, and approachable atmosphere. Detailed hair strands with natural flow. Gentle highlights and minimal shadows. Style similar to "manga de wakaru" business book illustrations.' },
+      { id: 2, name: '少年漫画風', desc: '週刊少年ジャンプ風・ワンピース/ドラゴンボールのような迫力バトル', prompt: 'Japanese Weekly Shonen Jump manga illustration style, full color spread page quality. Extremely bold heavy ink linework with exaggerated line weight variation, extra thick black outlines on characters that pop off the page. Hyper-detailed background art with dramatic forced perspective and foreshortening. Intensely vivid oversaturated colors with hard cel-shading and deep black shadows. Extreme high contrast lighting with powerful directional light source, strong rim lighting, and glowing color bleeds. Screentone texture overlay for authentic print feeling. Over-the-top dynamic composition breaking panel boundaries. Extreme camera angles - ultra low angle looking up, severe dutch angle, exaggerated fish-eye distortion. Characters bursting out of frame toward viewer. Explosive speed lines filling entire background, dense impact lines radiating from action points, heavy motion blur streaks. Flying debris, shattering rocks, dust clouds, sparks, and energy particles everywhere. Shockwave ripples and impact craters. Exaggerated anatomy with dynamic impossible poses, muscles tensed at peak action, clothing and hair blown by intense force. Screaming expressions with wide eyes and intense emotion visible. Battle aura effects, glowing energy emanating from characters, light beam attacks, flame or lightning effects. Onomatopoeia sound effect aesthetics integrated into composition. Color palette with extreme complementary contrasts - hot orange against cool blue, vivid red against deep green. Background practically vibrating with energy. Character colors cranked to maximum saturation against darker dramatic backgrounds. Raw hand-drawn ink texture with visible brush strokes, confident and aggressive linework. Peak Weekly Shonen Jump double-page spread impact and intensity.' },
+      { id: 3, name: '少女漫画風', desc: 'りぼん・なかよし風・セーラームーン/カードキャプターさくらのキラキラ世界', prompt: 'Japanese classic shoujo manga illustration style, full color magazine cover quality. Extremely delicate graceful linework with elegant flowing strokes, impossibly fine detailed lines for each individual hair strand flowing like silk in the wind. Overwhelmingly large sparkling eyes taking up half the face, filled with multiple layered star-shaped highlights, galaxy-like gradient irises with jewel-like depth, impossibly long dramatic eyelashes with individual strands visible. Eyes reflecting entire universes of emotion and light. Explosively dreamy backgrounds completely filled with floating roses, cherry blossoms, lilies cascading everywhere. Thousands of sparkles, glitter particles, and diamond dust filling every empty space. Soap bubbles with rainbow reflections, soft feathers floating, ribbons swirling through the air. Ultra soft ethereal pastel color palette - delicate pink, dreamy lavender, heavenly baby blue, pearl white with iridescent shimmer. Colors so soft they seem to glow from within. Extreme airbrush-style gradients melting seamlessly into each other. Overwhelming light effects - lens flares bursting like stars, soft focus bokeh everywhere, holy light rays streaming down, rainbow prism effects, glowing halos around characters. Everything bathed in magical golden hour lighting. Hair flowing in impossible dramatic waves defying gravity, each strand catching light individually, hair so detailed it looks like liquid silk or spun gold. Clothing billowing ethereally as if underwater or in zero gravity. Intensely emotional expressions - huge glistening tears like crystal jewels catching light, deep blushes spreading across cheeks with soft gradient, lips with glass-like shine and perfect highlights. Decorative elements overflowing - intricate lace patterns, satin ribbons, pearl accessories, crystal jewelry catching prismatic light. Ornate floral borders framing the scene. Screen tone texture with delicate flower patterns, soft dot gradients creating dreamy atmosphere. Peak Ribon or Nakayoshi magazine cover impact - overwhelmingly beautiful and romantic aesthetic that takes breath away.' },
+      { id: 4, name: 'シンプル線画風', desc: '北欧ミニマルデザイン・無印良品/Apple UIのような極限シンプル', prompt: 'Ultra minimalist vector line art illustration style, extreme geometric simplification. Perfectly uniform clean black outlines with mathematically precise thickness, no variation or hand-drawn imperfection whatsoever. Radically simplified shapes - circles, rectangles, triangles only. Human figures reduced to essential geometric forms, faces with dot eyes and single line expressions or no facial features at all. Objects stripped down to absolute iconic silhouettes instantly recognizable with minimum detail. Completely flat solid colors with absolutely zero gradients, zero shadows, zero highlights, zero texture. Pure unmodulated color fills like digital paint bucket tool. Limited color palette - maximum 3-4 colors plus black and white. Extreme negative space utilization - bold empty areas as important as filled areas. Perfectly balanced asymmetrical composition. Every element placed with mathematical precision and intentional breathing room. Razor sharp vector edges, infinitely scalable appearance. Colors either bold primary palette or sophisticated muted Scandinavian tones - dusty pink, sage green, warm gray, mustard yellow. No decorative elements whatsoever - no patterns, no textures, no ornaments. If it can be removed without losing meaning, it is removed. Absolute economy of visual information. Clean modern tech company aesthetic meets Scandinavian design philosophy. Swiss graphic design precision. Museum of Modern Art poster quality minimalism.' },
+      { id: 5, name: 'アメコミ風', desc: 'マーベル/DCコミックス・スパイダーマン/バットマン風のポップなアメリカン', prompt: 'Classic American superhero comic book illustration style, full color splash page quality. Extremely bold heavy black ink outlines with aggressive confident brushwork, thick to thin line variation showing hand-inked craftsmanship. Cross-hatching and feathering techniques for dramatic shadow rendering. Hyper-muscular heroic anatomy with exaggerated proportions - massive shoulders, impossibly broad chests, chiseled jawlines, dynamic impossible poses showing extreme foreshortening. Capes and costumes billowing dramatically with every fold and wrinkle rendered. Veins visible on tensed muscles. Intensely vibrant saturated colors - primary red, blue, yellow popping off the page. Bold complementary color clashes creating visual impact. Colors so vivid they practically glow. Heavy halftone Ben-Day dot patterns visible throughout - dots on skin tones, dots in shadows, dots creating gradients and atmospheric effects. Authentic vintage newsprint comic aesthetic with CMYK color separation feeling. Extreme dramatic lighting with stark noir-influenced shadows. Pure black shadow areas with sharp cutoffs, intense rim lighting outlining figures against dark backgrounds. Multiple dramatic light sources creating complex shadow interplay. Kirby Krackle cosmic energy effects - black dot clusters representing cosmic power and explosions. Energy beams, lightning bolts, power auras crackling around characters. Explosive impact bursts and starburst effects. Hyper-detailed urban destruction backgrounds - crumbling skyscrapers, shattered concrete, flying debris, billowing smoke clouds, cracked asphalt, bent steel girders. Epic sense of scale with tiny figures against massive destruction. Over-the-top action composition bursting beyond panel borders. Extreme camera angles - severe worm\'s eye view looking up at towering heroes, dramatic bird\'s eye capturing citywide chaos. Fists and feet punching directly toward viewer breaking the fourth wall. Sound effect aesthetic integrated - impact feels like visible POW, WHAM, KRACKOOM even without text. Visual noise and energy radiating from every action. Classic Marvel and DC bronze age aesthetic meets modern Image Comics intensity. Jack Kirby cosmic grandeur combined with Jim Lee hyper-detailed rendering. Print-ready newsstand comic book cover impact.' },
+      { id: 6, name: '水彩イラスト風', desc: '絵本・水彩画風・ジブリ背景美術のような柔らかく温かい水彩タッチ', prompt: 'Traditional watercolor painting illustration style, fine art gallery exhibition quality. Extremely loose expressive brushwork with visible confident brush strokes dancing across the surface. Wet-on-wet technique creating magical unpredictable color blooms and bleeds spreading organically. Heavily visible cold-pressed watercolor paper texture - rough tooth surface catching pigment in valleys, creating beautiful granulation effects. Paper grain showing through transparent washes. Pure white of paper glowing through as brightest highlights, never covered with white paint. Dreamy soft edges melting into each other where colors meet, bleeding and feathering beautifully. Occasional crisp hard edges for contrast where wet meets dry. Cauliflower blooms and backruns embraced as happy accidents adding organic authenticity. Luminous transparent color layers built up through multiple glazing washes - colors glowing from within as light passes through pigment to paper and reflects back. Visible layering where previous washes peek through subsequent layers creating color depth impossible in opaque media. Pigment granulation and separation visible - heavier pigments settling into paper texture creating speckled effects. Sedimentary pigments like ultramarine and burnt sienna showing natural granular texture. Color separating into component pigments in wet washes. Water marks and tide lines where puddles dried, salt texture effects creating snowflake patterns, deliberate splatter and spray adding energy and movement. Drips running down occasionally left as artistic elements. Color palette either soft ethereal pastels with diluted washes or rich vibrant concentrated pigments pooling in shadows. Atmospheric perspective through increasingly diluted cooler washes for distant elements. Warm concentrated colors for foreground, pale cool hints for background. Loose gestural quality - suggesting rather than defining, leaving areas unfinished and breathing. Strategic unpainted white spaces as important design elements. Edges lost and found throughout composition guiding the eye. Authentic traditional watercolor aesthetic - handmade imperfection, organic unpredictability, luminosity only achievable through transparent water media. Fine art watercolor society exhibition quality, museum-worthy traditional painting appearance.' },
+      { id: 7, name: 'レトロ漫画風', desc: '昭和レトロ漫画・ベルサイユのばら/キャンディキャンディの懐かしい雰囲気', prompt: 'Authentic vintage Japanese manga illustration style from 1970s-1980s golden age era, full color magazine illustration quality. Classic hand-drawn ink linework with visible pen nib texture - G-pen bold strokes for outlines, Maru-pen delicate lines for details, Kabura-pen for hair strands. Iconic retro character design - large sparkling eyes with dramatic star-shaped highlights and heavy black areas, distinctively thick eyebrows, pointed chins, impossibly long legs with exaggerated height proportions. Feathered hair with dramatic volume and wings, era-specific hairstyles reflecting 70s-80s fashion. Heavy authentic screen tone usage throughout - IC Screen and Letraset tone patterns visible. Mechanical dot tones for shading, gradient tones for atmospheric effects, decorative pattern tones for clothing and backgrounds. Sand tones, cross-hatch tones, sparkle effect tones layered for depth. Nostalgic vintage color palette limited by period printing technology - slightly misaligned CMYK registration creating subtle color bleeds. Warm yellowed paper undertone as if aged newsprint. Saturated but slightly muted colors - distinctive orange-reds, turquoise blues, mustard yellows, dusty pinks specific to era printing. Dramatic speed lines and effect lines hand-drawn with ruler precision. Beta-flash technique with white radiating from black. Emotion symbols - sweat drops, anger veins, sparkle backgrounds, flower frames for beautiful moments. Detailed realistic backgrounds contrasting with stylized characters - urban Japanese cityscapes, detailed interior rooms with period-accurate furniture and technology, school buildings, trains. Visible analog production artifacts - white-out correction marks, slight ink bleeding at line intersections, paste-up edges where tones were cut and applied by hand. Authentic pre-digital manga craftsmanship visible throughout. Emotional dramatic atmosphere with characteristic manga storytelling visual language. Style reminiscent of Shonen Sunday, Margaret, or Ribon magazine illustrations from the era. Museum of manga history exhibition quality, preserving authentic golden age aesthetic.' },
+      { id: 8, name: 'Webtoon風', desc: '韓国ウェブトゥーン・俺だけレベルアップ/神之塔の現代的デジタル表現', prompt: 'Modern Korean webtoon illustration style, premium platform featured series quality. Immaculately clean digital linework with perfect smooth curves, crisp confident outlines with subtle thickness variation. Ultra-polished professional digital art finish with no visible brush texture. Stunning modern character designs reflecting Korean beauty standards - small perfectly proportioned faces, flawless porcelain skin with luminous glow, high nose bridges, delicate lips with glass-like shine, perfectly groomed eyebrows. Large expressive eyes but more realistic than Japanese manga - detailed iris patterns with multiple light reflections, natural double eyelids, subtle eye makeup visible. Impossibly beautiful hair rendered strand by strand with silky smooth highlights, perfectly styled K-drama worthy hairstyles catching light beautifully. Hair color ranging from natural blacks and browns to trendy Korean hair colors - ash gray, burgundy, honey brown with subtle highlights. Ultra-soft airbrushed shading with seamless gradient transitions, no hard cel-shading edges. Delicate blushing on cheeks, nose tips, and ears with soft pink diffusion. Subsurface scattering effect on skin creating lifelike translucency, especially on ears and fingertips catching backlight. Fashion-forward contemporary clothing with meticulous fabric rendering - designer brands, trendy Korean street fashion, perfectly fitted suits, flowing dresses with realistic fabric physics. Detailed accessories - luxury watches, earrings, necklaces, designer bags all rendered with care. Cinematic atmospheric backgrounds with intentional depth of field blur - sharp focused characters against dreamy bokeh backgrounds. Modern Korean urban settings - stylish cafes, luxury apartments, Seoul cityscape, university campuses, corporate offices all rendered with architectural accuracy. Sophisticated color palette with harmonious color theory - soft pastels for romance genres, moody desaturated tones for thriller/drama, vibrant saturated colors for fantasy. Characteristic soft purple, pink, and blue atmospheric color grading throughout. Dramatic cinematic lighting with multiple soft light sources - warm golden hour glow, cool blue moonlight, neon city reflections, soft window light. Rim lighting separating characters from backgrounds, lens flares and light leaks adding filmic quality. Vertical scroll composition optimized with dramatic reveals and pacing. Strategic use of extreme close-ups on emotional eyes and faces. Dynamic camera angles creating webtoon-specific visual storytelling impact. Peak Naver Webtoon or Kakao Page premium series quality. Production value rivaling top-tier series like "True Beauty", "Lore Olympus", or "Solo Leveling". Professional Korean digital illustration studio quality throughout.' },
+      { id: 9, name: '絵本イラスト風', desc: 'ピーターラビット/こぐまちゃん/はらぺこあおむしの温かい絵本世界', prompt: 'Heartwarming children\'s picture book illustration style, award-winning Caldecott Medal quality. Impossibly soft rounded shapes with no sharp edges anywhere - every corner curved, every form pillowy and huggable. Characters designed to be maximally endearing and lovable. Extremely warm inviting color palette radiating comfort - soft buttercream yellows, cozy terracotta oranges, gentle sage greens, warm rosy pinks, comforting sky blues. Colors feel like a warm blanket, a cup of cocoa, a gentle hug from grandmother. Visible handcrafted traditional media texture throughout - soft colored pencil strokes with waxy buildup, gentle watercolor washes bleeding softly at edges, gouache opacity with subtle brushwork visible, crayon texture with paper grain showing through. Mixed media layering creating rich tactile depth. Adorable character designs with exaggerated cute proportions - oversized round heads on small bodies, huge sparkling innocent eyes full of wonder, tiny button noses, rosy chubby cheeks that beg to be pinched. Simplified rounded hands like mittens, stubby little legs. Expressions radiating pure joy, curiosity, and warmth. Whimsical fantastical backgrounds bursting with cozy details - tiny mushroom houses with smoking chimneys, rolling gentle hills like soft pillows, friendly trees with faces, winding paths inviting exploration. Every element anthropomorphized and friendly - smiling suns, sleepy moons, cheerful flowers waving hello. Rich storytelling details rewarding close inspection - tiny creatures hiding in corners, secret doorways, miniature scenes within scenes. Visual narrative depth encouraging repeated viewing and discovery. Magical golden hour lighting bathing everything in warmth - soft diffused light with no harsh shadows, gentle glowing highlights, everything lit as if by candlelight or sunset. Light itself feels cozy and safe. Nostalgic timeless quality evoking beloved childhood memories - style reminiscent of classic Beatrix Potter, Eric Carle tactile quality, Oliver Jeffers whimsy, Jon Klassen subtle humor. Museum of children\'s literature exhibition quality, destined to become treasured bedtime reading for generations.' },
+      { id: 10, name: 'クール・スタイリッシュ風', desc: 'ファッション誌風・NANA/Paradise Kissのモノトーンでおしゃれな表現', prompt: 'Ultra-cool sophisticated Japanese manga illustration style, high-end fashion magazine editorial quality. Razor-sharp confident ink linework with extreme precision, bold black strokes with dramatic thick-to-thin variation. Heavy use of pure blacks creating striking silhouettes and noir-like contrast. Predominantly monochromatic palette - deep rich blacks, pure bright whites, and full spectrum of sophisticated grays. Strategic limited accent colors used sparingly for maximum visual impact - single striking red on lips or blood, electric blue on eyes or neon signs, vibrant orange on cigarette ember or sunset. Color so selective it becomes symbolic and meaningful. Impossibly stylish character designs with model-like proportions - tall lean figures, sharp angular facial features, high cheekbones, narrow intense eyes with piercing gaze. Cool detached expressions radiating effortless confidence and mysterious allure. Characters look like they belong on fashion runways or in indie film posters. Hyper-detailed contemporary fashion rendered with obsessive precision - designer leather jackets with every zipper and stitch visible, perfectly tailored black suits, flowing oversized coats, avant-garde streetwear. Fabric textures meticulously rendered - leather shine, denim weave, silk drape, knit patterns. Accessories as character statements - designer sunglasses, silver jewelry, expensive watches, statement earrings. Cinematic urban nightscape backgrounds dripping with atmosphere - rain-slicked Tokyo streets reflecting neon, towering skyscrapers disappearing into fog, underground club interiors with dramatic lighting, empty late-night train platforms, rooftop silhouettes against city lights. Architecture rendered with precise perspective and urban grit. Dramatic noir-influenced lighting creating extreme contrast - harsh single light sources casting deep black shadows, rim lighting outlining figures against darkness, neon glow painting colored light on faces, cigarette smoke catching beams of light. Shadows as important as lit areas. Heavy screen tone usage for sophisticated gray gradations - mechanical dot patterns creating smooth transitions, gradient tones for atmospheric depth, cross-hatch tones for textured shadows. Analog manga craftsmanship with modern aesthetic sensibility. Edgy artistic composition with unconventional framing - extreme close-ups on eyes and lips, figures cropped dramatically at frame edges, negative space used boldly, dutch angles creating tension and unease. Visual rhythm between dense detailed areas and stark empty spaces. Cool detached atmosphere with underlying emotional intensity - style reminiscent of "Nana", "Paradise Kiss", "Gangsta", "Tokyo Ghoul" aesthetic sophistication. Fashion editorial meets underground manga culture. Gallery exhibition quality art book appearance.' },
       { id: 99, name: '画像から参照', desc: '添付画像の雰囲気に合わせます', prompt: '' }
     ];
 
@@ -148,8 +148,13 @@
       var s39 = useState(''); var newCharName = s39[0], setNewCharName = s39[1];
       var s40 = useState(null); var newCharImg = s40[0], setNewCharImg = s40[1];
       var s41 = useState(''); var newProjName = s41[0], setNewProjName = s41[1];
-      var s42 = useState({ step1: '', step2: '' }); var promptTemplates = s42[0], setPromptTemplates = s42[1];
-      var s43 = useState(''); var generationStep = s43[0], setGenerationStep = s43[1];
+      var s42 = useState([]); var promptSteps = s42[0], setPromptSteps = s42[1];
+      var s43 = useState(0); var currentStep = s43[0], setCurrentStep = s43[1];
+      var s44 = useState(0); var totalSteps = s44[0], setTotalSteps = s44[1];
+      var s45 = useState('simple'); var genMode = s45[0], setGenMode = s45[1];
+      var s46 = useState(0); var modalImgIdx = s46[0], setModalImgIdx = s46[1];
+      var s47 = useState(1); var charAbsentCount = s47[0], setCharAbsentCount = s47[1];
+      var s48 = useState(false); var enableSubChars = s48[0], setEnableSubChars = s48[1];
 
       var fileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
@@ -166,7 +171,23 @@
           var f = localStorage.getItem('manga_fav_styles');
           if (f) setFavStyles(JSON.parse(f));
           var h = localStorage.getItem('manga_history');
-          if (h) setHistory(JSON.parse(h));
+          if (h) {
+            try {
+              var histData = JSON.parse(h);
+              // 履歴が10件を超えている場合は削減
+              if (histData.length > 10) {
+                histData = histData.slice(0, 10);
+                localStorage.setItem('manga_history', JSON.stringify(histData));
+                console.log('履歴を10件に削減しました');
+              }
+              setHistory(histData);
+            } catch(e) {
+              console.error('履歴読み込みエラー:', e);
+              // 破損している場合は空にする
+              localStorage.setItem('manga_history', '[]');
+              setHistory([]);
+            }
+          }
           var fh = localStorage.getItem('manga_fav_hist');
           if (fh) setFavHist(JSON.parse(fh));
           var p = localStorage.getItem('manga_projects');
@@ -180,32 +201,131 @@
             var dd = JSON.parse(d);
             if (dd.story && dd.story.length > 0) { setDraft(dd); setShowDraft(true); }
           }
+          var m = localStorage.getItem('manga_gen_mode');
+          if (m) setGenMode(m);
+          var ca = localStorage.getItem('manga_char_absent_count');
+          if (ca) setCharAbsentCount(parseInt(ca, 10));
+          var sc = localStorage.getItem('manga_enable_sub_chars');
+          if (sc) setEnableSubChars(sc === 'true');
         } catch(e) { console.error(e); }
       }, []);
 
-      // プロンプトテンプレート読み込み
+      // ファイル名パース: "01_分析_text.txt" → { order: 1, name: "分析", type: "text" }
+      function parseFileName(filename) {
+        var parts = filename.replace('.txt', '').split('_');
+        if (parts.length < 3) return null;
+        return {
+          order: parseInt(parts[0], 10),
+          name: parts.slice(1, -1).join('_'),
+          type: parts[parts.length - 1]
+        };
+      }
+
+      // グロブパターンで試すファイル名候補
+      function generateFilePatterns(num) {
+        var numStr = String(num).padStart(2, '0');
+        var names = ['分析', '構成', '設計', '詳細', '画像生成', 'analysis', 'structure', 'design', 'detail', 'image', 'generation'];
+        var types = ['text', 'image'];
+        var patterns = [];
+
+        names.forEach(function(name) {
+          types.forEach(function(type) {
+            patterns.push(numStr + '_' + name + '_' + type + '.txt');
+          });
+        });
+
+        return patterns;
+      }
+
+      // 1つの番号で最初に見つかったファイルを読み込む
+      function tryLoadOneNumber(num) {
+        var patterns = generateFilePatterns(num);
+
+        return Promise.race(
+          patterns.map(function(filename) {
+            return fetch('./prompts/' + filename)
+              .then(function(res) {
+                if (!res.ok) throw new Error('Not found');
+                return res.text().then(function(txt) {
+                  var parsed = parseFileName(filename);
+                  return {
+                    file: filename,
+                    name: parsed.name,
+                    type: parsed.type,
+                    template: txt,
+                    order: parsed.order
+                  };
+                });
+              });
+          })
+        ).catch(function() {
+          return null;
+        });
+      }
+
+      // プロンプトテンプレート読み込み（簡易版）
       useEffect(function() {
         function loadPrompts() {
-          fetch('./prompt_step1.txt')
-            .then(function(res) { return res.text(); })
-            .then(function(txt) {
-              return fetch('./prompt_step2.txt')
-                .then(function(res) { return res.text(); })
-                .then(function(txt2) {
-                  setPromptTemplates({ step1: txt, step2: txt2 });
-                  console.log('プロンプトテンプレートを読み込みました');
-                });
-            })
-            .catch(function(e) {
-              console.error('プロンプトファイルの読み込みに失敗:', e);
-              setPromptTemplates({
-                step1: getDefaultPromptStep1(),
-                step2: getDefaultPromptStep2()
+          // モードに応じてファイルを選択
+          var mode = localStorage.getItem('manga_gen_mode') || 'simple';
+          var knownFiles;
+
+          if (mode === 'simple') {
+            knownFiles = [
+              { file: '01_簡易_image.txt', name: '簡易', type: 'image', order: 1 }
+            ];
+          } else {
+            knownFiles = [
+              { file: '01_分析_text.txt', name: '分析', type: 'text', order: 1 },
+              { file: '02_画像生成_image.txt', name: '画像生成', type: 'image', order: 2 }
+            ];
+          }
+
+          var promises = knownFiles.map(function(fileInfo) {
+            return fetch('./prompts/' + fileInfo.file)
+              .then(function(res) {
+                if (!res.ok) throw new Error('Not found');
+                return res.text();
+              })
+              .then(function(template) {
+                return {
+                  file: fileInfo.file,
+                  name: fileInfo.name,
+                  type: fileInfo.type,
+                  order: fileInfo.order,
+                  template: template
+                };
+              })
+              .catch(function(err) {
+                console.warn('ファイル読み込み失敗:', fileInfo.file, err.message);
+                return null;
+              });
+          });
+
+          Promise.all(promises)
+            .then(function(results) {
+              var foundSteps = results.filter(function(r) { return r !== null; });
+
+              if (foundSteps.length === 0) {
+                console.error('プロンプトファイルが見つかりません。デフォルトを使用します。');
+                foundSteps = [
+                  { file: '01_分析_text.txt', name: '分析', type: 'text', template: getDefaultPromptStep1(), order: 1 },
+                  { file: '02_画像生成_image.txt', name: '画像生成', type: 'image', template: getDefaultPromptStep2(), order: 2 }
+                ];
+              }
+
+              foundSteps.sort(function(a, b) { return a.order - b.order; });
+              setPromptSteps(foundSteps);
+              setTotalSteps(foundSteps.length);
+              console.log('プロンプト読み込み完了:', foundSteps.length + 'ステップ');
+              foundSteps.forEach(function(s) {
+                console.log('  ✓ ' + s.file + ' (' + s.name + ', ' + s.type + ')');
               });
             });
         }
+
         loadPrompts();
-      }, []);
+      }, [genMode]);
 
       // 下書き自動保存
       useEffect(function() {
@@ -217,6 +337,26 @@
         }, 3000);
         return function() { clearTimeout(timer); };
       }, [story, style, speech, model, genCount]);
+
+      // プレビューモーダルでのキーボード操作
+      useEffect(function() {
+        if (!showImg) return;
+
+        function handleKeyDown(e) {
+          if (e.key === 'ArrowLeft' && modalImgIdx > 0) {
+            setModalImgIdx(modalImgIdx - 1);
+          } else if (e.key === 'ArrowRight' && modalImgIdx < genImages.length - 1) {
+            setModalImgIdx(modalImgIdx + 1);
+          } else if (e.key === 'Escape') {
+            setShowImg(false);
+          }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        return function() {
+          window.removeEventListener('keydown', handleKeyDown);
+        };
+      }, [showImg, modalImgIdx, genImages.length]);
 
       function restoreDraft() {
         if (draft) {
@@ -240,15 +380,47 @@
         localStorage.setItem('manga_fav_styles', JSON.stringify(nf));
       }
 
+      // 画像圧縮関数
+      function compressImage(dataUrl, maxWidth, quality) {
+        return new Promise(function(resolve) {
+          var img = new Image();
+          img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+
+            // アスペクト比を保持してリサイズ
+            var width = img.width;
+            var height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 圧縮して新しいData URLを取得
+            var compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedDataUrl);
+          };
+          img.src = dataUrl;
+        });
+      }
+
       function addChar() {
         if (!newCharName || !newCharImg) return;
-        var nc = { id: 'c_' + Date.now(), name: newCharName, img: newCharImg };
-        var ncs = chars.concat([nc]);
-        setChars(ncs);
-        localStorage.setItem('manga_chars', JSON.stringify(ncs));
-        setShowAddChar(false);
-        setNewCharName('');
-        setNewCharImg(null);
+        // 画像を圧縮してから保存（最大幅400px、品質0.6）
+        compressImage(newCharImg, 400, 0.6).then(function(compressedImg) {
+          var nc = { id: 'c_' + Date.now(), name: newCharName, img: compressedImg };
+          var ncs = chars.concat([nc]);
+          setChars(ncs);
+          localStorage.setItem('manga_chars', JSON.stringify(ncs));
+          setShowAddChar(false);
+          setNewCharName('');
+          setNewCharImg(null);
+        });
       }
 
       function delChar(id) {
@@ -264,9 +436,12 @@
         if (!f) return;
         var r = new FileReader();
         r.onload = function(ev) {
-          var nc = selChars.slice();
-          nc[idx] = { id: 't_' + Date.now(), name: f.name, img: ev.target.result, temp: true };
-          setSelChars(nc);
+          // 一時キャラクターも圧縮してメモリ使用量を削減
+          compressImage(ev.target.result, 500, 0.7).then(function(compressedImg) {
+            var nc = selChars.slice();
+            nc[idx] = { id: 't_' + Date.now(), name: f.name, img: compressedImg, temp: true };
+            setSelChars(nc);
+          });
         };
         r.readAsDataURL(f);
       }
@@ -300,32 +475,102 @@
         return (hasC ? '2人' : '1人') + 'のキャラクターが会話形式で語るマンガを生成してください。\n\n【絵のテイスト】\n' + spt + '\n\n【セリフスタイル】\n' + spch + '\n\n' + charRule + '\n\n' + refTxt + '\n\n【画像条件】\n・縦長1枚、アスペクト比 2:3\n・上から縦に4コマ構成\n・日本語は縦書き、右から左\n・カラーのみ\n\n---\n【記事内容】\n' + story;
       }
 
-      // Step 1: 詳細プロンプト生成
-      function generateDetailedPrompt() {
+      // 共通変数を取得
+      function getCommonVars() {
         var st = STYLES.find(function(s) { return s.id === style; });
         var hasC = selChars[1] !== null;
-
         var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
+
+        // キャラクター登場パネル数に応じた文字数ガイドライン
+        var charPresentPanels = 4 - charAbsentCount;
+        var charCountGuide = '';
+        if (charAbsentCount === 0) {
+          charCountGuide = '\n\n【文字数ガイドライン】\n・キャラクター登場パネル：4コマ全て\n・総セリフ文字数：90-120文字（理想：100-110文字）\n・1パネルあたり平均：22-30文字';
+        } else if (charAbsentCount === 1) {
+          charCountGuide = '\n\n【文字数ガイドライン】\n・キャラクター登場パネル：3コマ\n・総セリフ文字数：70-90文字（理想：75-85文字）\n・1パネルあたり平均：23-30文字';
+        } else if (charAbsentCount === 2) {
+          charCountGuide = '\n\n【文字数ガイドライン】\n・キャラクター登場パネル：2コマ\n・総セリフ文字数：50-70文字（理想：55-65文字）\n・1パネルあたり平均：25-35文字';
+        }
+
         var spch = speech === 'formal'
-          ? '【セリフ・語尾のバリエーション（重要）】\n・敬語（です・ます調）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜ですか？／〜でしょうか）\n　説明系（〜なんです／〜ております）\n　展開系（〜ですが、／実は〜／つまり〜）\n　強調系（〜なのです／〜と言えます）\n　締め系（〜しましょう／〜してみてください）'
-          : '【セリフ・語尾のバリエーション（重要）】\n・タメ口（だ・である調、カジュアル）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜だよね？／〜じゃない？／〜かな？）\n　説明系（〜なんだ／〜だよ／〜ってこと）\n　展開系（〜だけど、／実は〜／つまり〜）\n　強調系（〜なんだよ！／〜だって！）\n　締め系（〜しよう／〜してみて／〜だね）\n・親しみやすく、フレンドリーなトーンで';
+          ? '【セリフ・語尾のバリエーション（重要）】\n・敬語（です・ます調）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜ですか？／〜でしょうか）\n　説明系（〜なんです／〜ております）\n　展開系（〜ですが、／実は〜／つまり〜）\n　強調系（〜なのです／〜と言えます）\n　締め系（〜しましょう／〜してみてください）' + charCountGuide
+          : '【セリフ・語尾のバリエーション（重要）】\n・タメ口（だ・である調、カジュアル）を基本とする\n・同じ語尾が連続しないようにする\n・4コマ内で最低3種類以上の語尾パターンを使い分ける\n・以下から自然に混ぜる：\n　問いかけ系（〜だよね？／〜じゃない？／〜かな？）\n　説明系（〜なんだ／〜だよ／〜ってこと）\n　展開系（〜だけど、／実は〜／つまり〜）\n　強調系（〜なんだよ！／〜だって！）\n　締め系（〜しよう／〜してみて／〜だね）\n・親しみやすく、フレンドリーなトーンで' + charCountGuide;
+        // キャラクター不在パネルのルールを作成
+        var absentPanelRule = '';
+        if (charAbsentCount === 0) {
+          absentPanelRule = '\n\n【キャラクター不在パネル】\n■ Character-Absent Panel Requirement:\n⚠️ CRITICAL: DO NOT include any character-absent panels\n- ALL 4 panels MUST show characters\n- Every panel must have the character(s) visible and present\n- Do NOT create panels with only backgrounds, diagrams, infographics, or objects\n- Do NOT create concept visualization panels\n- Do NOT create landscape-only panels\n- Characters must appear in ALL FOUR panels without exception\n\n・キャラクター不在パネルは一切不要です\n・全4パネルに必ずキャラクターを登場させてください\n・背景のみ、図解のみ、物のみのパネルは作成禁止です\n・4コマ全てにキャラクターが登場している必要があります';
+        } else if (charAbsentCount === 1) {
+          absentPanelRule = '\n\n【キャラクター不在パネル】\n■ Character-Absent Panel Requirement:\n- MUST include exactly 1 character-absent panel (no more, no less)\n- Character-present panels: 3 panels\n- Character-absent panels: 1 panel\n- These panels tell the story visually without characters\n- NO speech bubbles in character-absent panels\n- Include title/heading (10 characters max) using story keywords\n- Reflect specific story content, NOT generic imagery\n\n・キャラクター登場パネル：3パネル\n・キャラクター不在パネル：1パネル（必須）\n・不在パネルでは図解・イメージ等でストーリーを視覚的に表現';
+        } else if (charAbsentCount === 2) {
+          absentPanelRule = '\n\n【キャラクター不在パネル】\n■ Character-Absent Panel Requirement:\n- MUST include exactly 2 character-absent panels (no more, no less)\n- Character-present panels: 2 panels\n- Character-absent panels: 2 panels\n- These panels tell the story visually without characters\n- NO speech bubbles in character-absent panels\n- Include title/heading (10 characters max) using story keywords\n- Reflect specific story content, NOT generic imagery\n\n・キャラクター登場パネル：2パネル\n・キャラクター不在パネル：2パネル（必須）\n・不在パネルでは図解・イメージ等でストーリーを視覚的に表現';
+        }
 
         var charRule = hasC
-          ? '【キャラクター人数ルール】\n・メインの登場人物は2人（デザインは参考画像に従う）\n・1枚目の画像のキャラクター：説明役\n・2枚目の画像のキャラクター：相談者役\n・相談者は絶対に説明をさせないでください\n・背景内の説明用イメージ人物（歴史的人物など）は別扱い\n\n【キャラクター登場ルール】\n・1コマに2人が登場しなくてもいい\n・1コマに説明者のみ、相談者のみでもいい'
-          : '【キャラクター人数ルール】\n・登場人物は1人のみ（参考画像のキャラクター）\n・読者に語りかける形式で進行\n・独白・説明形式で内容を伝える';
+          ? '【キャラクター人数ルール】\n・メインの登場人物は2人（デザインは参考画像に従う）\n・1枚目の画像のキャラクター：説明役\n・2枚目の画像のキャラクター：相談者役\n・相談者は絶対に説明をさせないでください\n・背景内の説明用イメージ人物（歴史的人物など）は別扱い\n\n【キャラクター登場ルール】\n・1コマに2人が登場しなくてもいい\n・1コマに説明者のみ、相談者のみでもいい' + absentPanelRule
+          : '【キャラクター人数ルール】\n・登場人物は1人のみ（参考画像のキャラクター）\n・読者に語りかける形式で進行\n・独白・説明形式で内容を伝える' + absentPanelRule;
+        var charCountText = hasC ? '2人のキャラクター' : '1人のキャラクター';
 
-        var prompt1 = replaceVars(promptTemplates.step1, {
+        // サブキャラクター指示
+        var subCharInstructions = enableSubChars
+          ? '\n\n⚠️ SUPPORTING CHARACTER GENERATION:\n\n■ Additional Characters in Story:\n- If the story mentions additional characters (customers, clerks, friends, family members, etc.), you MUST include them in the manga\n- Generate these supporting characters appropriately based on their role in the story\n- Examples: If story mentions "お客様" (customer), create a customer character and show them in conversation panels\n- Supporting characters should be designed to fit the story context (e.g., business customer in suit, cafe customer in casual clothes)\n- Maintain consistency of supporting characters across panels if they appear multiple times\n\n■ Supporting Character Design:\n- Create supporting characters that are DISTINCT from main characters (different appearance, clothing, hairstyle)\n- Supporting characters should look realistic for their role (customers, staff, strangers, etc.)\n- Use appropriate age, gender, and appearance based on story context\n- Supporting characters can have simpler designs than main characters but must be clearly visible\n\n■ Interaction Panels:\n- When main characters talk to supporting characters, show BOTH in the same panel\n- Use appropriate camera angles to show conversation (e.g., over-the-shoulder shots, two-shot compositions)\n- Speech bubbles should clearly indicate who is speaking\n- Supporting characters can have dialogue as specified in the story\n\n■ Examples:\n- Story: "（お客様）「無料だと思ってました」" → Show a customer character speaking this line, with main character also visible\n- Story: "店員に聞いてみた" → Include a staff/clerk character in that panel\n- Story: "友人と話していた" → Show the friend character alongside main character'
+          : '';
+
+        // キャラクター外見の詳細指示を作成
+        var charDesc = hasC
+          ? '⚠️ CRITICAL CHARACTER REFERENCE IMAGE REQUIREMENT - HIGHEST PRIORITY:\n\n■ Reference Image Order:\n- 1st image: Main Explainer character (説明者)\n- 2nd image: Questioner character (相談者)\n' + (selChars[2] ? '- 3rd image: Additional reference\n' : '') + (selChars[3] ? '- 4th image: Additional reference\n' : '') + '\n■ Character Reproduction Requirement:\nYou MUST reproduce the character design from reference images with 100% FIDELITY:\n- Facial features: Face shape, eye shape, eye color, nose, mouth - EXACTLY as shown\n- Hairstyle: Hair length, style, bangs, volume - EXACTLY as shown\n- Hair color: Exact color shade, highlights, gradients - EXACTLY as shown\n- Clothing: Style, color, patterns, accessories - EXACTLY as shown\n- Body proportions: Height, build, posture - EXACTLY as shown\n- Art style: Line weight, coloring technique, shading style - EXACTLY as shown\n\n■ Critical Instructions:\n- DO NOT modify or "improve" the character design\n- DO NOT change clothing between panels unless story requires it\n- DO NOT add or remove accessories\n- The reference images define the ABSOLUTE visual identity\n- Any deviation from reference images is considered a critical error\n- Maintain PERFECT consistency across all 4 panels\n\n■ Character Role Distribution:\n- Explainer (1st image character): ~70% of dialogue, provides main information\n- Questioner (2nd image character): ~30% of dialogue, asks questions and responds\n- Both characters must maintain their exact appearance from reference images throughout' + subCharInstructions
+          : '⚠️ CRITICAL CHARACTER REFERENCE IMAGE REQUIREMENT - HIGHEST PRIORITY:\n\n■ Reference Image:\n- 1st image: The main character (登場人物)\n' + (selChars[2] ? '- 2nd image: Additional reference\n' : '') + (selChars[3] ? '- 3rd image: Additional reference\n' : '') + '\n■ Character Reproduction Requirement:\nYou MUST reproduce the character design from the reference image with 100% FIDELITY:\n- Facial features: Face shape, eye shape, eye color, nose, mouth - EXACTLY as shown\n- Hairstyle: Hair length, style, bangs, volume - EXACTLY as shown\n- Hair color: Exact color shade, highlights, gradients - EXACTLY as shown\n- Clothing: Style, color, patterns, accessories - EXACTLY as shown\n- Body proportions: Height, build, posture - EXACTLY as shown\n- Art style: Line weight, coloring technique, shading style - EXACTLY as shown\n\n■ Critical Instructions:\n- DO NOT modify or "improve" the character design\n- DO NOT change clothing between panels unless story requires it\n- DO NOT add or remove accessories\n- The reference image defines the ABSOLUTE visual identity\n- Any deviation from reference image is considered a critical error\n- Maintain PERFECT consistency across all 4 panels\n- This character speaks directly to the reader in explanatory style' + subCharInstructions;
+
+        return {
           STORY: story,
           STYLE_PROMPT: spt,
           SPEECH_STYLE: spch,
-          CHARACTER_RULE: charRule
+          CHARACTER_RULE: charRule,
+          CHARACTER_COUNT: charCountText,
+          CHARACTER_DESCRIPTION: charDesc
+        };
+      }
+
+      // 単一ステップの実行
+      function executeStep(stepIndex, stepOutputs) {
+        var step = promptSteps[stepIndex];
+        var commonVars = getCommonVars();
+
+        // 変数マップを作成
+        var vars = Object.assign({}, commonVars);
+
+        // 前ステップの出力を追加
+        if (stepIndex > 0) {
+          vars.PREV_OUTPUT = stepOutputs[stepIndex - 1] || '';
+        }
+
+        // 各ステップの出力を追加
+        stepOutputs.forEach(function(output, idx) {
+          vars['STEP' + (idx + 1) + '_OUTPUT'] = output;
         });
 
+        // 最終ステップの出力を追加
+        if (stepOutputs.length > 0) {
+          vars.GENERATED_PROMPT = stepOutputs[stepOutputs.length - 1];
+        }
+
+        var promptText = replaceVars(step.template, vars);
+        console.log('===== Step ' + (stepIndex + 1) + ': ' + step.name + ' =====');
+        console.log(promptText);
+
+        if (step.type === 'image') {
+          // 画像生成
+          return executeImageGeneration(promptText);
+        } else {
+          // テキスト生成
+          return executeTextGeneration(promptText);
+        }
+      }
+
+      // テキスト生成
+      function executeTextGeneration(promptText) {
         var body = {
-          contents: [{ parts: [{ text: prompt1 }] }]
+          contents: [{ parts: [{ text: promptText }] }]
         };
-        console.log("===== prompt1 =====");
-        console.log(prompt1);
 
         return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + apiKey, {
           method: 'POST',
@@ -333,7 +578,7 @@
           body: JSON.stringify(body)
         })
         .then(function(res) {
-          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Step 1 API error'); });
+          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Text API error'); });
           return res.json();
         })
         .then(function(data) {
@@ -341,31 +586,16 @@
           if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
             txt = data.candidates[0].content.parts[0].text || '';
           }
-          console.log('生成されたプロンプト:', txt);
+          console.log('生成結果:', txt.substring(0, 200) + '...');
           return txt;
         });
       }
 
-      // Step 2: 画像生成
-      function generateImageFromPrompt(detailedPrompt) {
-        var st = STYLES.find(function(s) { return s.id === style; });
-        var hasC = selChars[1] !== null;
+      // 画像生成
+      function executeImageGeneration(promptText) {
         var m = MODELS.find(function(x) { return x.id === model; });
-
-        var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
-        var charCountText = hasC ? '2人のキャラクター' : '1人のキャラクター';
-        var charDesc = hasC
-          ? '【キャラクター人数ルール】\n・メインの登場人物は2人（デザインは参考画像に従う）\n・1枚目の画像のキャラクター：説明役\n・2枚目の画像のキャラクター：相談者役\n・相談者は絶対に説明をさせないでください\n\n【キャラクター登場ルール】\n・1コマに2人が登場しなくてもいい\n・1コマに説明者のみ、相談者のみでもいい'
-          : '【キャラクター人数ルール】\n・登場人物は1人のみ（参考画像のキャラクター）\n・読者に語りかける形式で進行';
-
-        var prompt2 = replaceVars(promptTemplates.step2, {
-          CHARACTER_COUNT: charCountText,
-          STYLE_PROMPT: spt,
-          CHARACTER_DESCRIPTION: charDesc,
-          GENERATED_PROMPT: detailedPrompt
-        });
-
         var parts = [];
+
         selChars.forEach(function(c) {
           if (c && c.img) {
             var b = c.img.split(',')[1];
@@ -378,12 +608,16 @@
         }
 
         var body = {
-          system_instruction: { parts: [{ text: prompt2 }] },
+          system_instruction: { parts: [{ text: promptText }] },
           contents: [{ parts: parts }],
-          generationConfig: { responseModalities: ['IMAGE'] }
+          generationConfig: {
+            responseModalities: ['IMAGE'],
+            temperature: 0.4,      // 一貫性重視：低めに設定（0.3-0.5推奨）
+            topP: 0.85,           // より予測可能な出力
+            topK: 40,             // 候補を絞る
+            candidateCount: 1     // 1つの結果のみ生成
+          }
         };
-        console.log("===== prompt2 =====");
-        console.log(prompt2);
 
         return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
           method: 'POST',
@@ -391,7 +625,7 @@
           body: JSON.stringify(body)
         })
         .then(function(res) {
-          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Step 2 API error'); });
+          if (!res.ok) return res.json().then(function(err) { throw new Error(err.error ? err.error.message : 'Image API error'); });
           return res.json();
         })
         .then(function(data) {
@@ -405,82 +639,141 @@
         });
       }
 
-      // メイン生成関数（2段階処理）
+      // メイン生成関数（複数ステップ対応）
       function generate() {
         if (!apiKey) { setError('APIキーを設定してください'); return; }
         if (!selChars[0]) { setError('説明者を選択してください'); return; }
         if (!story || story.length < 20) { setError('20文字以上入力してください'); return; }
+        if (promptSteps.length === 0) { setError('プロンプトが読み込まれていません'); return; }
 
         setIsGen(true);
         setError('');
         setGenImages([]);
         setCurImg(0);
         cancelRef.current = false;
-        setGenerationStep('');
+        setCurrentStep(0);
 
         var m = MODELS.find(function(x) { return x.id === model; });
-        var currentImages = [];
+        var currentImages = new Array(genCount);  // 固定サイズ配列で並列実行に対応
 
-        function generateOne(i) {
-          if (i >= genCount || cancelRef.current) {
-            setIsGen(false);
-            setGenerationStep('');
-            return;
+        function generateOne(imgIndex) {
+          if (cancelRef.current) {
+            return Promise.reject(new Error('キャンセルされました'));
           }
-          setGenIdx(i);
+          setGenIdx(imgIndex);
 
-          // Step 1: プロンプト生成
-          setGenerationStep('prompt');
-          generateDetailedPrompt()
-            .then(function(detailedPrompt) {
+          var stepOutputs = [];
+          var finalOutput = null;  // 最終的な画像出力を保持
+
+          function executeSteps(stepIndex) {
+            if (stepIndex >= promptSteps.length || cancelRef.current) {
               if (cancelRef.current) throw new Error('キャンセルされました');
+              return Promise.resolve();
+            }
 
-              // Step 2: 画像生成
-              setGenerationStep('image');
-              return generateImageFromPrompt(detailedPrompt);
-            })
-            .then(function(img) {
-              if (!img) throw new Error('画像の生成に失敗しました');
+            setCurrentStep(stepIndex + 1);
 
-              currentImages = currentImages.concat([img]);
-              setGenImages(currentImages.slice());
-              setCurImg(i);
+            return executeStep(stepIndex, stepOutputs)
+              .then(function(output) {
+                if (promptSteps[stepIndex].type === 'image') {
+                  // 画像生成の場合、結果を保存
+                  if (!output) throw new Error('画像の生成に失敗しました');
 
-              var st = STYLES.find(function(s) { return s.id === style; });
-              var hi = { id: 'g_' + Date.now() + '_' + i, img: img, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
+                  finalOutput = output;  // 最終出力を保存
+                  currentImages[imgIndex] = output;
+                  var completedImages = currentImages.filter(function(img) { return img !== undefined; });
+                  setGenImages(completedImages);
+                  setCurImg(completedImages.length - 1);
 
-              try {
-                var savedHist = localStorage.getItem('manga_history');
-                var histArr = savedHist ? JSON.parse(savedHist) : [];
-                histArr.unshift(hi);
-                if (histArr.length > 50) histArr = histArr.slice(0, 50);
-                localStorage.setItem('manga_history', JSON.stringify(histArr));
-                setHistory(histArr);
+                  // 画像を圧縮して履歴に保存（最大幅400px、品質0.6で中程度圧縮）
+                  compressImage(output, 400, 0.6).then(function(compressedImg) {
+                    var st = STYLES.find(function(s) { return s.id === style; });
+                    var hi = { id: 'g_' + Date.now() + '_' + imgIndex, img: compressedImg, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
 
-                var now = new Date();
-                var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                var savedUsage = localStorage.getItem('manga_usage');
-                var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
-                if (!usageData.monthly) usageData.monthly = [];
-                var md = usageData.monthly.find(function(x) { return x.month === mk; });
-                if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
-                md.items.push({ date: now.toISOString(), model: model, price: m.price });
-                usageData.total.count = (usageData.total.count || 0) + 1;
-                usageData.total.cost = (usageData.total.cost || 0) + m.price;
-                localStorage.setItem('manga_usage', JSON.stringify(usageData));
-                setUsage(usageData);
-              } catch(e) {}
+                    try {
+                      var savedHist = localStorage.getItem('manga_history');
+                      var histArr = savedHist ? JSON.parse(savedHist) : [];
+                      histArr.unshift(hi);
+                      if (histArr.length > 10) histArr = histArr.slice(0, 10);
+                      localStorage.setItem('manga_history', JSON.stringify(histArr));
+                      setHistory(histArr);
+                    } catch(e) {
+                      // QuotaExceededError対策: 古い履歴を削除して再試行
+                      if (e.name === 'QuotaExceededError') {
+                        console.warn('容量超過: 履歴を5件に削減して再試行');
+                        try {
+                          var reducedHist = [hi].concat(histArr.slice(0, 4));
+                          localStorage.setItem('manga_history', JSON.stringify(reducedHist));
+                          setHistory(reducedHist);
+                        } catch(e2) {
+                          // それでも失敗したら履歴を完全クリア
+                          console.error('履歴保存失敗: 履歴をクリアします');
+                          localStorage.setItem('manga_history', JSON.stringify([hi]));
+                          setHistory([hi]);
+                          alert('履歴の容量が限界に達したため、古い履歴を削除しました。');
+                        }
+                      } else {
+                        console.error('履歴保存エラー:', e);
+                      }
+                    }
 
-              setGenerationStep('');
-              generateOne(i + 1);
+                    // 使用量記録
+                    try {
+                      var now = new Date();
+                      var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                      var savedUsage = localStorage.getItem('manga_usage');
+                      var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
+                      if (!usageData.monthly) usageData.monthly = [];
+                      var md = usageData.monthly.find(function(x) { return x.month === mk; });
+                      if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
+                      md.items.push({ date: now.toISOString(), model: model, price: m.price });
+                      usageData.total.count = (usageData.total.count || 0) + 1;
+                      usageData.total.cost = (usageData.total.cost || 0) + m.price;
+                      localStorage.setItem('manga_usage', JSON.stringify(usageData));
+                      setUsage(usageData);
+                    } catch(e) {
+                      console.error('使用量記録エラー:', e);
+                    }
+                  }).catch(function(e) {
+                    console.error('画像圧縮エラー:', e);
+                  });
+                } else {
+                  // テキスト生成の場合、次のステップの入力として保存
+                  stepOutputs.push(output);
+                }
+
+                return executeSteps(stepIndex + 1);
+              });
+          }
+
+          return executeSteps(0)
+            .then(function() {
+              setCurrentStep(0);
+              return finalOutput;  // 完了した画像を返す
             })
             .catch(function(e) {
-              setError('エラー: ' + e.message);
-              setIsGen(false);
-              setGenerationStep('');
+              console.error('画像' + (imgIndex + 1) + '生成エラー:', e);
+              throw e;
             });
         }
-        generateOne(0);
+
+        // 並列生成: 全ての画像を同時に生成
+        var promises = [];
+        for (var i = 0; i < genCount; i++) {
+          promises.push(generateOne(i));
+        }
+
+        Promise.all(promises)
+          .then(function() {
+            setIsGen(false);
+            setCurrentStep(0);
+            console.log('全' + genCount + '枚の生成が完了しました');
+          })
+          .catch(function(e) {
+            setError('エラー: ' + e.message);
+            setIsGen(false);
+            setCurrentStep(0);
+          });
       }
 
       function dl(img, i) {
@@ -498,7 +791,7 @@
 
       function saveProj() {
         if (!newProjName) return;
-        var p = { id: 'p_' + Date.now(), name: newProjName, settings: { selChars: selChars, style: style, styleRef: styleRef, speech: speech, model: model }, ts: new Date().toISOString() };
+        var p = { id: 'p_' + Date.now(), name: newProjName, settings: { selChars: selChars, style: style, styleRef: styleRef, speech: speech, model: model, charAbsentCount: charAbsentCount, enableSubChars: enableSubChars }, ts: new Date().toISOString() };
         var np = projects.concat([p]);
         setProjects(np);
         localStorage.setItem('manga_projects', JSON.stringify(np));
@@ -514,6 +807,8 @@
         if (s.styleRef) setStyleRef(s.styleRef);
         if (s.speech) setSpeech(s.speech);
         if (s.model) setModel(s.model);
+        if (s.charAbsentCount !== undefined) setCharAbsentCount(s.charAbsentCount);
+        if (s.enableSubChars !== undefined) setEnableSubChars(s.enableSubChars);
         setCurProj(p);
       }
 
@@ -523,6 +818,47 @@
         setProjects(np);
         localStorage.setItem('manga_projects', JSON.stringify(np));
         if (curProj && curProj.id === id) setCurProj(null);
+      }
+
+      function clearProj() {
+        setCurProj(null);
+      }
+
+      function exportProj(p) {
+        var json = JSON.stringify(p, null, 2);
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'project_' + p.name + '_' + Date.now() + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function importProj() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(e) {
+          var file = e.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            try {
+              var imported = JSON.parse(ev.target.result);
+              imported.id = 'p_' + Date.now();
+              imported.name = imported.name + ' (インポート)';
+              var np = projects.concat([imported]);
+              setProjects(np);
+              localStorage.setItem('manga_projects', JSON.stringify(np));
+              alert('プロジェクトをインポートしました');
+            } catch(e) {
+              alert('ファイルの読み込みに失敗しました');
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
       }
 
       function compTut() { localStorage.setItem('manga_tut_seen', '1'); setShowTut(false); setTutStep(0); }
@@ -586,10 +922,39 @@
             </div>
 
             <div class="mb-4">
-              <div class="flex items-center mb-2"><span class="text-sm font-semibold text-gray-700">プロジェクト</span></div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-700">プロジェクト</span>
+                <div class="flex gap-1">
+                  ${curProj && html`<button onClick=${clearProj} class="text-xs text-gray-500 hover:text-gray-700" title="選択解除">解除</button>`}
+                  <button onClick=${importProj} class="text-xs text-blue-500 hover:text-blue-700" title="インポート">↓</button>
+                </div>
+              </div>
               <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-                ${projects.map(function(p) { return html`<button key=${p.id} onClick=${function() { loadProj(p); }} onContextMenu=${function(e) { e.preventDefault(); delProj(p.id); }} class="flex-shrink-0 px-3 py-2 text-xs rounded-lg border ${curProj && curProj.id === p.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${p.name}</button>`; })}
-                <button onClick=${function() { setShowAddProj(true); }} class="flex-shrink-0 px-3 py-2 text-xs rounded-lg border border-dashed border-gray-300 text-gray-400">+ 新規</button>
+                ${projects.map(function(p) {
+                  return html`
+                    <div key=${p.id} class="relative flex-shrink-0 group">
+                      <button
+                        onClick=${function() { loadProj(p); }}
+                        class="px-3 py-2 text-xs rounded-lg border ${curProj && curProj.id === p.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}"
+                      >
+                        ${p.name}
+                      </button>
+                      <div class="absolute -top-1 -right-1 hidden group-hover:flex gap-1">
+                        <button
+                          onClick=${function(e) { e.stopPropagation(); exportProj(p); }}
+                          class="w-4 h-4 bg-green-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-green-600"
+                          title="エクスポート"
+                        >↑</button>
+                        <button
+                          onClick=${function(e) { e.stopPropagation(); delProj(p.id); }}
+                          class="w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                          title="削除"
+                        >×</button>
+                      </div>
+                    </div>
+                  `;
+                })}
+                <button onClick=${function() { setShowAddProj(true); }} class="flex-shrink-0 px-3 py-2 text-xs rounded-lg border border-dashed border-gray-300 text-gray-400 hover:bg-gray-50">+ 新規</button>
               </div>
             </div>
 
@@ -615,6 +980,23 @@
                 <div class="grid grid-cols-4 gap-2 py-2">
                   ${['説明者*', '相談者', '参考3', '参考4'].map(function(label, idx) { return html`<div key=${idx} class="border-2 ${selChars[idx] ? 'border-blue-400' : 'border-dashed border-gray-300'} rounded-lg p-1"><div class="text-xs text-gray-500 text-center mb-1">${label}</div>${selChars[idx] ? html`<div class="relative"><img src=${selChars[idx].img} class="w-full h-14 object-cover rounded" /><button onClick=${function() { var nc = selChars.slice(); nc[idx] = null; setSelChars(nc); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<div class="h-14 flex items-center justify-center bg-gray-50 rounded cursor-pointer hover:bg-gray-100" onClick=${function() { charRefs.current[idx] && charRefs.current[idx].click(); }}><span class="text-gray-400 text-xs">+</span></div>`}<input ref=${function(el) { charRefs.current[idx] = el; }} type="file" accept="image/*" class="hidden" onChange=${function(e) { handleFile(e, idx); }} /></div>`; })}
                 </div>
+                <div class="mt-2 pt-2 border-t border-gray-200">
+                  <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked=${enableSubChars}
+                      onChange=${function(e) {
+                        setEnableSubChars(e.target.checked);
+                        localStorage.setItem('manga_enable_sub_chars', e.target.checked);
+                      }}
+                      class="mr-2"
+                    />
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-gray-700">サブキャラクター自動生成</div>
+                      <div class="text-xs text-gray-500">ストーリーに登場する追加キャラクター（お客様、店員など）をAIが自動生成して登場させます</div>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -625,7 +1007,7 @@
               </button>
               <div class="accordion-content ${accord.indexOf('style') >= 0 ? 'open' : ''}">
                 <div class="max-h-48 overflow-y-auto py-2 scrollbar-thin">
-                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><span class="flex-1 text-sm">${s.name}</span>${s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
+                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${s.name}</div><div class="text-xs text-gray-500">${s.desc}</div></div>${s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
                 </div>
                 ${style === 99 && html`<div class="mt-2 p-2 border border-dashed rounded-lg"><div class="text-xs text-gray-500 mb-2">参照画像</div>${styleRef ? html`<div class="relative inline-block"><img src=${styleRef.img} class="h-16 rounded" /><button onClick=${function() { setStyleRef(null); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<button onClick=${function() { styleRefInput.current && styleRefInput.current.click(); }} class="text-sm text-blue-500">+ 画像選択</button>`}<input ref=${styleRefInput} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setStyleRef({ img: ev.target.result }); }; r.readAsDataURL(f); }} /></div>`}
               </div>
@@ -652,6 +1034,66 @@
               <div class="accordion-content ${accord.indexOf('model') >= 0 ? 'open' : ''}">
                 <div class="space-y-1 py-2">
                   ${MODELS.map(function(m) { return html`<label key=${m.id} class="flex items-center p-2 rounded-lg cursor-pointer ${model === m.id ? 'bg-blue-50' : 'hover:bg-gray-50'}"><input type="radio" checked=${model === m.id} onChange=${function() { setModel(m.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${m.name}</div><div class="text-xs text-gray-500">${m.price > 0 ? '$' + m.price + '/枚' : '無料'}</div></div></label>`; })}
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('genmode'); }} class="flex items-center justify-between w-full text-left">
+                <div class="flex items-center"><span class="text-sm font-semibold text-gray-700">生成モード</span></div>
+                <span class="text-gray-400">${accord.indexOf('genmode') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('genmode') >= 0 ? 'open' : ''}">
+                <div class="space-y-2 py-2">
+                  <button
+                    onClick=${function() {
+                      setGenMode('simple');
+                      localStorage.setItem('manga_gen_mode', 'simple');
+                    }}
+                    class="w-full p-3 rounded-lg border-2 text-left ${genMode === 'simple' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}"
+                  >
+                    <div class="font-semibold text-sm">簡易モード</div>
+                    <div class="text-xs text-gray-600 mt-1">1ステップで高速生成（デフォルト）</div>
+                  </button>
+                  <button
+                    onClick=${function() {
+                      setGenMode('analyze');
+                      localStorage.setItem('manga_gen_mode', 'analyze');
+                    }}
+                    class="w-full p-3 rounded-lg border-2 text-left ${genMode === 'analyze' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}"
+                  >
+                    <div class="font-semibold text-sm">詳細モード</div>
+                    <div class="text-xs text-gray-600 mt-1">2ステップで精密生成</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <button onClick=${function() { togAccord('absent'); }} class="flex items-center justify-between w-full text-left">
+                <div class="flex items-center"><span class="text-sm font-semibold text-gray-700">キャラクター不在パネル</span></div>
+                <span class="text-gray-400">${accord.indexOf('absent') >= 0 ? '▼' : '▶'}</span>
+              </button>
+              <div class="accordion-content ${accord.indexOf('absent') >= 0 ? 'open' : ''}">
+                <div class="flex gap-2 py-2">
+                  ${[0, 1, 2].map(function(count) {
+                    return html`
+                      <button
+                        key=${count}
+                        onClick=${function() {
+                          setCharAbsentCount(count);
+                          localStorage.setItem('manga_char_absent_count', count);
+                        }}
+                        class="flex-1 p-2 rounded-lg border-2 text-center ${charAbsentCount === count ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}"
+                      >
+                        <div class="text-sm font-semibold">${count === 0 ? 'なし' : count + '回'}</div>
+                        <div class="text-xs text-gray-500 mt-1">${count === 0 ? '全4コマ' : (4 - count) + 'コマ登場'}</div>
+                      </button>
+                    `;
+                  })}
+                </div>
+                <div class="text-xs text-gray-500 mt-2 px-1">
+                  キャラクター不在パネルでは、図解・イメージ・クローズアップなどで内容を視覚的に表現します。
                 </div>
               </div>
             </div>
@@ -685,22 +1127,25 @@
                   <div class="flex items-center justify-between mb-2">
                     <div>
                       <div class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</div>
-                      ${generationStep && html`<div class="text-sm text-blue-700 mt-1">${generationStep === 'prompt' ? 'Step 1: プロンプト生成中...' : generationStep === 'image' ? 'Step 2: 漫画生成中...' : ''}</div>`}
+                      ${currentStep > 0 && totalSteps > 0 && html`<div class="text-sm text-blue-700 mt-1">Step ${currentStep}/${totalSteps}: ${promptSteps[currentStep - 1] ? promptSteps[currentStep - 1].name : ''}中...</div>`}
                     </div>
                     <button onClick=${function() { cancelRef.current = true; }} class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">停止</button>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full transition-all" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
-                  ${generationStep && html`
-                    <div class="mt-2 flex items-center gap-2 text-xs text-blue-600">
-                      <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 rounded-full ${generationStep === 'prompt' ? 'bg-blue-500 animate-pulse' : 'bg-green-500'}"></div>
-                        <span>プロンプト生成</span>
-                      </div>
-                      <span>→</span>
-                      <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 rounded-full ${generationStep === 'image' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'}"></div>
-                        <span>漫画生成</span>
-                      </div>
+                  ${currentStep > 0 && totalSteps > 0 && html`
+                    <div class="mt-2 flex items-center gap-2 text-xs text-blue-600 overflow-x-auto">
+                      ${promptSteps.map(function(step, idx) {
+                        var stepNum = idx + 1;
+                        var isActive = stepNum === currentStep;
+                        var isDone = stepNum < currentStep;
+                        return html`
+                          <div key=${idx} class="flex items-center gap-1 flex-shrink-0">
+                            <div class="w-2 h-2 rounded-full ${isActive ? 'bg-blue-500 animate-pulse' : isDone ? 'bg-green-500' : 'bg-gray-300'}"></div>
+                            <span class="${isActive ? 'font-semibold' : ''}">${step.name}</span>
+                          </div>
+                          ${idx < promptSteps.length - 1 && html`<span class="flex-shrink-0">→</span>`}
+                        `;
+                      })}
                     </div>
                   `}
                   ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
@@ -714,8 +1159,30 @@
                 <span class="text-lg font-semibold text-gray-700">生成された漫画</span>
                 ${genImages.length > 0 && html`<span class="text-sm text-gray-500">${curImg + 1}/${genImages.length}枚</span>`}
               </div>
-              <div class="bg-gray-100 rounded-lg p-4 min-h-64 flex items-center justify-center cursor-pointer" onClick=${function() { if (genImages[curImg]) { setModalImg(genImages[curImg]); setShowImg(true); } }}>
-                ${genImages.length > 0 ? html`<img src=${genImages[curImg]} class="max-w-full max-h-[500px] rounded-lg shadow-lg" />` : html`<div class="text-gray-400 text-center"><div class="text-4xl mb-2">○</div><div>ここに漫画が表示されます</div></div>`}
+              <div class="bg-gray-100 rounded-lg p-4 min-h-64 flex items-center justify-center relative">
+                ${genImages.length > 0 ? html`
+                  ${curImg > 0 && html`
+                    <button
+                      onClick=${function() { setCurImg(curImg - 1); }}
+                      class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all z-10"
+                    >
+                      ←
+                    </button>
+                  `}
+                  <img
+                    src=${genImages[curImg]}
+                    class="max-w-full max-h-[500px] rounded-lg shadow-lg cursor-pointer"
+                    onClick=${function() { setModalImg(genImages[curImg]); setModalImgIdx(curImg); setShowImg(true); }}
+                  />
+                  ${curImg < genImages.length - 1 && html`
+                    <button
+                      onClick=${function() { setCurImg(curImg + 1); }}
+                      class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all z-10"
+                    >
+                      →
+                    </button>
+                  `}
+                ` : html`<div class="text-gray-400 text-center"><div class="text-4xl mb-2">○</div><div>ここに漫画が表示されます</div></div>`}
               </div>
               ${genImages.length > 1 && html`<div class="flex justify-center gap-2 mt-4">${genImages.map(function(_, i) { return html`<button key=${i} onClick=${function() { setCurImg(i); }} class="w-10 h-10 rounded-lg border-2 ${curImg === i ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${i + 1}</button>`; })}</div>`}
               ${genImages.length > 0 && html`<div class="flex gap-3 mt-4 justify-center"><button onClick=${function() { dl(genImages[curImg], curImg); }} class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg">ダウンロード</button><button onClick=${function() { setGenImages([]); }} class="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg">クリア</button></div>`}
@@ -776,7 +1243,42 @@
           <//>
 
           <${Modal} isOpen=${showImg} onClose=${function() { setShowImg(false); }} title="プレビュー" size="full">
-            <div class="flex items-center justify-center"><img src=${modalImg} class="max-w-full max-h-[80vh] rounded-lg" /></div>
+            <div class="flex flex-col items-center justify-center">
+              <div class="relative flex items-center justify-center w-full">
+                ${modalImgIdx > 0 && html`
+                  <button
+                    onClick=${function() { setModalImgIdx(modalImgIdx - 1); }}
+                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition-all z-10"
+                  >
+                    ←
+                  </button>
+                `}
+                <img src=${genImages[modalImgIdx]} class="max-w-full max-h-[70vh] rounded-lg" />
+                ${modalImgIdx < genImages.length - 1 && html`
+                  <button
+                    onClick=${function() { setModalImgIdx(modalImgIdx + 1); }}
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition-all z-10"
+                  >
+                    →
+                  </button>
+                `}
+              </div>
+              <div class="mt-4 text-center text-gray-600">${modalImgIdx + 1} / ${genImages.length}</div>
+              ${genImages.length > 1 && html`
+                <div class="flex gap-2 mt-4 overflow-x-auto max-w-full px-4">
+                  ${genImages.map(function(img, i) {
+                    return html`
+                      <img
+                        key=${i}
+                        src=${img}
+                        onClick=${function() { setModalImgIdx(i); }}
+                        class="w-16 h-24 object-cover rounded cursor-pointer border-2 ${modalImgIdx === i ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-400 transition-all"
+                      />
+                    `;
+                  })}
+                </div>
+              `}
+            </div>
           <//>
 
           <${Modal} isOpen=${showDraft} onClose=${function() { setShowDraft(false); }} title="下書きが見つかりました" size="sm">
