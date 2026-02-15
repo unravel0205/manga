@@ -1898,17 +1898,20 @@
               <button class="md:hidden text-gray-500 text-2xl" onClick=${function() { setSidebar(false); }}>×</button>
             </div>
 
-            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div class="mb-4 glass-card animate-fadeIn">
               <div class="flex items-center mb-3">
-                <span class="text-sm font-semibold text-gray-700">API設定</span>
+                <span class="text-sm font-semibold" style="color: var(--color-text-primary);">API設定</span>
                 <${HelpIcon} text=${HELP.api} />
               </div>
-              <div class="relative mb-2">
-                <input type=${showApi ? 'text' : 'password'} value=${apiKey} onInput=${function(e) { setApiKey(e.target.value); setApiSaved(false); }} placeholder="APIキーを入力" class="w-full px-3 py-2 pr-16 border rounded-lg text-sm" />
-                <button onClick=${function() { setShowApi(!showApi); }} class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">${showApi ? '隠す' : '表示'}</button>
+              <div class="relative mb-3">
+                <input type=${showApi ? 'text' : 'password'} value=${apiKey} onInput=${function(e) { setApiKey(e.target.value); setApiSaved(false); }} placeholder="APIキーを入力" class="input-field w-full pr-16 text-sm" />
+                <button onClick=${function() { setShowApi(!showApi); }} class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color: var(--color-text-secondary);">${showApi ? '隠す' : '表示'}</button>
               </div>
-              <button onClick=${saveApi} class="w-full py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">保存</button>
-              <div class="mt-2 text-xs ${apiSaved ? 'text-green-600' : 'text-amber-600'}">${apiSaved ? '保存済み' : '未保存'}</div>
+              <button onClick=${saveApi} class="btn-primary w-full text-sm">保存</button>
+              <div class="mt-2 text-xs flex items-center gap-1" style="color: ${apiSaved ? 'var(--color-success)' : 'var(--color-warning)'};">
+                <span>${apiSaved ? '✓' : '⚠'}</span>
+                <span>${apiSaved ? '保存済み' : '未保存'}</span>
+              </div>
             </div>
 
             <div class="mb-4">
@@ -2149,47 +2152,67 @@
               </div>
             </div>
 
-            <div class="mb-6">
-              <div class="flex items-center mb-2"><span class="text-lg font-semibold text-gray-700">ストーリー・記事内容</span><${HelpIcon} text=${HELP.story} /></div>
-              <textarea value=${story} onInput=${function(e) { setStory(e.target.value); }} placeholder="漫画にしたい内容を入力..." class="w-full h-40 p-4 border rounded-lg resize-y"></textarea>
-              <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <div class="mb-6 card animate-fadeIn">
+              <div class="flex items-center mb-3">
+                <span class="text-lg font-semibold" style="color: var(--color-text-primary);">ストーリー・記事内容</span>
+                <${HelpIcon} text=${HELP.story} />
+              </div>
+              <textarea
+                value=${story}
+                onInput=${function(e) { setStory(e.target.value); }}
+                placeholder="漫画にしたい内容を入力..."
+                class="input-field w-full h-40 resize-y"
+                style="font-family: var(--font-family);"
+              ></textarea>
+              <div class="flex justify-between text-xs mt-2" style="color: var(--color-text-secondary);">
                 <span>${lastSave ? '自動保存 ' + lastSave.toLocaleTimeString() : ''}</span>
                 <span>${story.length}文字</span>
               </div>
-              <div class="text-xs text-gray-600 mt-2">
+              <div class="text-xs mt-3" style="color: var(--color-text-secondary);">
                 詳細なコマ設定: 位置 / サイズ / 内容 / セリフ / 背景 / キャラ / 表情 / カメラアングル / カメラ距離
-                <button onClick=${function() { setShowPanelHelp(true); }} class="text-blue-500 hover:text-blue-600 ml-2">
+                <button onClick=${function() { setShowPanelHelp(true); }} class="ml-2" style="color: var(--color-primary);">
                   [詳細を見る]
                 </button>
               </div>
             </div>
 
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg flex flex-wrap items-center gap-4">
-              <span class="text-sm text-gray-700">生成枚数</span>
-              <div class="flex gap-2">${[1, 2, 3, 4, 5].map(function(n) { return html`<button key=${n} onClick=${function() { setGenCount(n); }} class="w-10 h-10 rounded-lg border-2 ${genCount === n ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${n}</button>`; })}</div>
-              <div class="text-sm text-gray-600">予想: $${est().usd}（約${est().jpy}円）</div>
+            <div class="mb-6 glass-card animate-fadeIn flex flex-wrap items-center gap-4">
+              <span class="text-sm font-medium" style="color: var(--color-text-primary);">生成枚数</span>
+              <div class="flex gap-2">${[1, 2, 3, 4, 5].map(function(n) { return html`<button key=${n} onClick=${function() { setGenCount(n); }} class="w-10 h-10 rounded-lg border-2 transition-all hover-lift ${genCount === n ? 'bg-blue-50' : ''}" style="border-color: ${genCount === n ? 'var(--color-primary)' : 'var(--color-border)'};">${n}</button>`; })}</div>
+              <div class="text-sm" style="color: var(--color-text-secondary);">予想: $${est().usd}（約${est().jpy}円）</div>
             </div>
 
             <div class="mb-6">
               ${isGen ? html`
-                <div class="p-4 bg-blue-50 rounded-lg">
-                  <div class="flex items-center justify-between mb-2">
+                <div class="glass-card animate-fadeIn" style="background: var(--color-info-light); border-color: var(--color-info);">
+                  <div class="flex items-center justify-between mb-3">
                     <div>
-                      <div class="font-semibold">生成中... ${genIdx + 1}/${genCount}枚</div>
-                      ${currentStep > 0 && totalSteps > 0 && html`<div class="text-sm text-blue-700 mt-1">Step ${currentStep}/${totalSteps}: ${promptSteps[currentStep - 1] ? promptSteps[currentStep - 1].name : ''}中...</div>`}
+                      <div class="font-semibold" style="color: var(--color-text-primary);">生成中... ${genIdx + 1}/${genCount}枚</div>
+                      ${currentStep > 0 && totalSteps > 0 && html`<div class="text-sm mt-1" style="color: var(--color-info);">Step ${currentStep}/${totalSteps}: ${promptSteps[currentStep - 1] ? promptSteps[currentStep - 1].name : ''}中...</div>`}
                     </div>
-                    <button onClick=${function() { cancelRef.current = true; }} class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">停止</button>
+                    <button
+                      onClick=${function() { cancelRef.current = true; }}
+                      class="px-4 py-2 text-sm rounded-lg transition-all"
+                      style="background: var(--color-error); color: var(--color-white);"
+                    >
+                      停止
+                    </button>
                   </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full transition-all" style=${{ width: ((genIdx + 1) / genCount * 100) + '%' }}></div></div>
+                  <div class="w-full rounded-full h-2" style="background: var(--color-bg-muted);">
+                    <div
+                      class="h-2 rounded-full transition-all"
+                      style=${{ width: ((genIdx + 1) / genCount * 100) + '%', background: 'var(--gradient-primary)' }}
+                    ></div>
+                  </div>
                   ${currentStep > 0 && totalSteps > 0 && html`
-                    <div class="mt-2 flex items-center gap-2 text-xs text-blue-600 overflow-x-auto">
+                    <div class="mt-3 flex items-center gap-2 text-xs overflow-x-auto" style="color: var(--color-info);">
                       ${promptSteps.map(function(step, idx) {
                         var stepNum = idx + 1;
                         var isActive = stepNum === currentStep;
                         var isDone = stepNum < currentStep;
                         return html`
                           <div key=${idx} class="flex items-center gap-1 flex-shrink-0">
-                            <div class="w-2 h-2 rounded-full ${isActive ? 'bg-blue-500 animate-pulse' : isDone ? 'bg-green-500' : 'bg-gray-300'}"></div>
+                            <div class="w-2 h-2 rounded-full ${isActive ? 'animate-pulse' : ''}" style="background: ${isActive ? 'var(--color-primary)' : isDone ? 'var(--color-success)' : 'var(--color-border)'};"></div>
                             <span class="${isActive ? 'font-semibold' : ''}">${step.name}</span>
                           </div>
                           ${idx < promptSteps.length - 1 && html`<span class="flex-shrink-0">→</span>`}
@@ -2197,10 +2220,19 @@
                       })}
                     </div>
                   `}
-                  ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 ${curImg === i ? 'border-blue-500' : 'border-gray-200'}" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
+                  ${genImages.length > 0 && html`<div class="mt-4 flex gap-2 overflow-x-auto">${genImages.map(function(img, i) { return html`<img key=${i} src=${img} class="w-20 h-28 object-cover rounded-lg cursor-pointer border-2 hover-lift" style="border-color: ${curImg === i ? 'var(--color-primary)' : 'var(--color-border)'};" onClick=${function() { setCurImg(i); }} />`; })}</div>`}
                 </div>
-              ` : html`<button onClick=${generate} disabled=${!apiSaved} class="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-bold rounded-lg disabled:opacity-50">漫画を生成（${genCount}枚）</button>`}
-              ${error && html`<div class="text-red-600 text-sm mt-2 text-center">${error}</div>`}
+              ` : html`
+                <button
+                  onClick=${generate}
+                  disabled=${!apiSaved}
+                  class="btn-primary w-full text-lg"
+                  style="padding: 1rem; ${!apiSaved ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+                >
+                  漫画を生成（${genCount}枚）
+                </button>
+              `}
+              ${error && html`<div class="alert alert-error mt-3 text-center">${error}</div>`}
             </div>
 
             <div class="mb-6">
