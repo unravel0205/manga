@@ -1,4 +1,4 @@
-あなたは4コマ漫画のシナリオライターです。
+あなたは漫画のシナリオライターです。
 以下のストーリーを分析し、画像生成AIが理解できる完全なプロンプトを作成してください。
 
 【重要】
@@ -15,10 +15,11 @@
    - 伝えたいメッセージは何か？
    - 感情の流れは？（例：困惑→発見→納得→希望）
 
-2. **4コマ構成を設計する**
+2. **コマ構成を設計する**
+   - ストーリーに【コマN】指定があればそれに従う（2-4コマ対応）
+   - 指定がない場合は4コマ構成とする
    - 各コマの役割（問題提起、展開、気づき、結論）
-   - キャラクター登場パネル：3パネル
-   - キャラクター不在パネル：1パネル
+   - キャラクター登場/不在の配分を決定
    - 不在パネルのタイプ選択（A: 概念、B: クローズアップ、C: 図解、D: 風景、E: 比喩）
 
 3. **セリフを確定する**
@@ -41,19 +42,56 @@
 ---
 【出力テンプレート】
 
-Generate a 4-panel vertical manga (4-koma) following these specifications:
+⚠️ CRITICAL: Generate a {{PANEL_COUNT}}-panel vertical manga (EXACTLY {{PANEL_COUNT}} panels)
 
 ---
-【IMAGE SPECIFICATIONS】
+【IMAGE SPECIFICATIONS - ABSOLUTE REQUIREMENTS】
+- Panel Count: {{PANEL_COUNT}} panels (MANDATORY - do not create more or fewer)
 - Aspect ratio: 2:3 (vertical)
 - Resolution: 4K (high resolution)
-- Layout: 4 panels stacked vertically
+- Layout: {{PANEL_COUNT}} panels in vertical composition
 - Style: Color manga only (no black and white)
 - Panel borders clearly defined
 
+{{CUSTOM_LAYOUT}}
+
 ---
-【CRITICAL: REFERENCE IMAGE FIDELITY - HIGHEST PRIORITY】
-⚠️ THIS IS THE MOST IMPORTANT REQUIREMENT - Must be executed perfectly:
+【優先順位ヒエラルキー - プロンプト全体に適用】
+⚠️ この優先順位がプロンプト全体の指示を統制します:
+
+■ レベル1：絶対必須（必ず守る、同時に適用される）
+  1️⃣ アートスタイル適用：{{STYLE_PROMPT}}を全パネルに完全適用
+     → 「どう描くか」（描画技法、誇張度、美的表現）を決定
+
+  2️⃣ 参照画像の忠実再現：参照画像が提供された場合、キャラクターデザインを忠実に再現
+     → 「キャラクターの見た目」（参照画像内でアートスタイルの枠組み内）を決定
+
+  3️⃣ 日本語テキスト品質：全吹き出しに明瞭で読みやすい縦書き日本語
+     → テキストの可読性と正確性を保証
+
+■ レベル2：コンテンツ指示（レベル1の制約内で正確に従う）
+  4️⃣ ユーザー指定コンテンツ：パネルごとの具体的指示に100%従う
+     → 「何を描くか」（セリフ、背景、シーン）を決定
+
+  5️⃣ ストーリー全般：未指定要素に対してストーリー内容を使用
+     → 創作的判断のコンテキストを提供
+
+■ レベル3：品質基準（重要だが柔軟性あり）
+  6️⃣ 構図バリエーション：アングル、距離感、背景タイプを変化させる
+     → 視覚的な豊かさを確保
+
+  7️⃣ キャラクター不在パネル：ストーリー固有の非キャラパネルを1つ含める
+     → 物語の深みとペース配分を追加
+
+🔑 重要原則:
+・レベル1の項目は「協調して機能」し、対立しない
+・アートスタイル = 「描画方法」、コンテンツ指定 = 「描画内容」
+・上位レベルが下位レベルより優先される
+・レベル1要件をレベル2・3のために犠牲にしてはならない
+
+---
+【CRITICAL: REFERENCE IMAGE FIDELITY】
+⚠️ レベル1-2 優先順位 - 上記の優先順位ヒエラルキーを参照:
 
 If a reference image is provided:
 - Faithfully reproduce the character design and art style
@@ -72,8 +110,8 @@ When generating multiple images in sequence, maintain ABSOLUTE CONSISTENCY:
 - Treat this as a continuous series requiring perfect visual coherence
 
 ---
-【CRITICAL: JAPANESE TEXT RENDERING - SECOND HIGHEST PRIORITY】
-⚠️ THIS IS CRITICALLY IMPORTANT - Must be executed perfectly:
+【CRITICAL: JAPANESE TEXT RENDERING】
+⚠️ レベル1-3 優先順位 - 上記の優先順位ヒエラルキーを参照:
 
 ■ Language & Script Requirements
 - ALL speech bubbles MUST contain Japanese text (日本語のみ)
@@ -94,11 +132,33 @@ When generating multiple images in sequence, maintain ABSOLUTE CONSISTENCY:
 - Natural Japanese spacing and line breaks
 - Sharp, clean character rendering (not blurry or distorted)
 
+■ Font Specifications
+- Use clear, simple Japanese font for maximum readability
+- Avoid decorative or overly stylized fonts that reduce legibility
+- Font should render each character distinctly without blurring
+
 ■ Speech Bubble Integration
 - Text must be properly positioned within speech bubbles
 - Bubble shapes: Normal speech → Round, Thought → Cloud-shaped, Surprise → Spiky
 - Text placement follows reading order (top-right → bottom-left)
 - Maximum 2 bubbles per panel
+
+⚠️ CRITICAL: Speech Bubble Placement for 2-Character Panels
+When 2 characters are present with dialogue in the same panel:
+- First speaker's bubble: RIGHT side of the panel (右側)
+- Second speaker's bubble: LEFT side of the panel (左側)
+- Reading flows RIGHT → LEFT (1st speaker → 2nd speaker)
+- NEVER place first speaker on left and second speaker on right
+
+Example correct placement:
+  [1st character speaks] ← RIGHT | LEFT → [2nd character responds]
+
+■ 吹き出し配置ルール（2キャラパネル）
+2人のキャラクターが会話する場合:
+- 1人目のセリフ: パネル右側に配置
+- 2人目のセリフ: パネル左側に配置
+- 読み順: 右→左（1人目→2人目）
+- 絶対に1人目を左、2人目を右に配置しないこと
 
 ---
 【ART STYLE AND COLORING】
@@ -107,7 +167,7 @@ When generating multiple images in sequence, maintain ABSOLUTE CONSISTENCY:
 {{STYLE_PROMPT}}
 
 ⚠️ MANDATORY APPLICATION RULES FOR YOUR FINAL PROMPT:
-- This art style MUST be applied to ALL 4 panels without exception in your final prompt
+- This art style MUST be applied to ALL panels without exception in your final prompt
 - This art style defines HOW the image generator should draw everything: characters, backgrounds, objects, effects
 - Your final prompt must instruct FULL stylistic exaggeration and characteristics as specified above
 - User content specifications (dialogue, backgrounds, etc.) tell WHAT to include, but THIS STYLE controls HOW to render them
@@ -147,7 +207,7 @@ Additional style requirements for your final prompt:
 
 ■ Dialogue Variety Requirements
 - Do NOT repeat the same content across panels (even with different wording)
-- Vary sentence endings across all 4 panels
+- Vary sentence endings across all panels
 - Avoid overly explanatory long sentences
 - Stay true to the story - no exaggeration or added facts
 
@@ -165,11 +225,11 @@ Additional style requirements for your final prompt:
 ---
 【PANEL COMPOSITION RULES - MANDATORY VARIETY】
 
-■ Camera Angle Variety (MUST use at least 3 different angles across 4 panels)
+■ Camera Angle Variety (MUST use at least 2-3 different angles across all panels)
 1. Front view, 2. 3/4 view (45-degree), 3. Profile (Side view)
 4. Bird's eye view (Overhead), 5. Low angle (Worm's eye), 6. Back view
 
-■ Camera Distance Variety (MUST use at least 3 different distances across 4 panels)
+■ Camera Distance Variety (MUST use at least 2-3 different distances across all panels)
 1. Close-up, 2. Bust shot, 3. Waist shot, 4. Full body, 5. Wide shot
 
 ■ Expression Variety
@@ -187,24 +247,17 @@ Type D - Light Effects, Type E - Nature/Seasonal
 {{STORY}}
 
 ---
-⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS - SECOND PRIORITY
+⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS
+
+⚠️ 優先順位ヒエラルキーを参照してください。
+アートスタイル（レベル1-1）とユーザーコンテンツ（レベル2-4）は協調して機能します。
 
 If the story content contains specific panel-by-panel instructions using markers like 【パネル1】, 【パネル2】, [Panel 1], etc., you MUST follow them with 100% FIDELITY:
 
-🎨 MANDATORY: Art Style Application (NON-NEGOTIABLE)
-Before following ANY user specifications below, you MUST understand this hierarchy:
-
-**PRIORITY #1 - ART STYLE (HOW to draw) - ALWAYS APPLIED, NEVER OVERRIDE:**
-- The art style from {{STYLE_PROMPT}} is MANDATORY and applies to EVERY SINGLE PANEL
-- Art style defines: drawing technique, line weight, coloring method, exaggeration level, visual aesthetic
-- Art style is THE FOUNDATION - it controls HOW everything is rendered
-- User specifications CANNOT override, modify, or reduce the art style application
-- Even if user specifies "simple office background", render it in the FULL selected art style with all its characteristics
-
-**PRIORITY #2 - USER CONTENT (WHAT to draw) - Follow exactly within the art style:**
-- User specifications define CONTENT ONLY: which objects, which words, which scenes
-- User specs tell you WHAT to include, NOT how to draw it
-- ALWAYS render user-specified content using the FULL art style from {{STYLE_PROMPT}}
+🎨 リマインダー: アートスタイル + ユーザーコンテンツは協調動作
+- アートスタイル（レベル1-1）：全要素を「どう描くか」
+- ユーザーコンテンツ（レベル2-4）：各パネルに「何を含めるか」
+- これらは補完的であり、対立しない
 
 **HOW THEY WORK TOGETHER:**
 - User says "Background: office" → Draw an office IN THE SELECTED ART STYLE (exaggerated, stylized, with all style characteristics)
@@ -262,9 +315,11 @@ Before following ANY user specifications below, you MUST understand this hierarc
 - The correct approach: "I will include exactly what user specified, rendered in the FULL selected art style"
 
 ---
-【DETAILED 4-PANEL INSTRUCTIONS】
+【DETAILED PANEL INSTRUCTIONS】
 
-Based on the story above and your analysis, create a 4-panel manga with the following specific instructions:
+Based on the story above and your analysis, create a manga with the following specific instructions:
+
+⚠️ IMPORTANT: If the story contains 【コマN】markers, follow the exact panel count specified (2-4 panels). If no markers exist, create a standard 4-panel manga.
 
 **Panel 1:**
 - Character present: [yes/no]
@@ -328,7 +383,7 @@ Before generating, verify:
 ✓ At least 3 different camera distances used
 ✓ At least 3 different background types used
 ✓ Panel borders are clearly defined
-✓ 4 panels stacked vertically in 2:3 aspect ratio
+✓ Correct number of panels (2-4) in vertical composition with 2:3 aspect ratio
 
 【DO NOT】
 × Use English text or romanization instead of Japanese
@@ -344,12 +399,17 @@ Before generating, verify:
 × Repeat the same dialogue content across panels
 
 ---
-FINAL REMINDER:
-#1 Priority: ALWAYS apply the FULL art style from {{STYLE_PROMPT}} to EVERY panel in your generated prompt. Art style is HOW to draw, user specs are WHAT to draw. They work together, never in conflict. NEVER reduce stylistic exaggeration when user specifies content.
-#2 Priority: If reference image provided, faithfully reproduce the character design (rendered in the selected art style).
-#3 Priority: Japanese text rendering - every speech bubble must display clear, readable Japanese characters in vertical writing format (styled according to the selected art style).
-#4 Priority: Follow user-specified content (dialogue, backgrounds, scenes) EXACTLY as written in your generated prompt, but ALWAYS instruct the image generator to render them using the FULL selected art style with all its exaggeration and stylistic characteristics.
-#5 Priority: Ensure variety in composition (angles, distances, backgrounds) and story-specific character-absent panels.
+FINAL REMINDER BEFORE GENERATION:
+⚠️ PANEL COUNT VERIFICATION: This manga has {{PANEL_COUNT}} panels. Ensure your output specifies this count. ⚠️
+
+Before generating final prompt, verify:
+✓ Panel count: {{PANEL_COUNT}} panels (NOT 4 if custom layout is specified in story)
+✓ レベル1項目（アートスタイル、参照画像忠実性、テキスト品質）は交渉不可
+✓ アートスタイルは「描画方法」、コンテンツ指定は「描画内容」 - 協調動作
+✓ 疑問がある場合、上位レベルを下位レベルより優先
+✓ レベル1要件をレベル2・3の優先のために犠牲にしてはならない
+✓ 画像生成AIに渡す最終プロンプトに、完全なアートスタイル指示を含めること
+✓ If custom layout instructions exist, include them EXACTLY in final prompt
 
 ---
 【出力上の注意】

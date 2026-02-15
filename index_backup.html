@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>漫画クリエイター</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s; }
     .tooltip-trigger:hover .tooltip { visibility: visible; opacity: 1; }
@@ -33,11 +31,6 @@
     var useState = React.useState;
     var useEffect = React.useEffect;
     var useRef = React.useRef;
-
-    // Supabase設定
-    var SUPABASE_URL = 'https://twhhrgcksstikdoyroto.supabase.co';
-    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3aGhyZ2Nrc3N0aWtkb3lyb3RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMzk3MzIsImV4cCI6MjA4NjYxNTczMn0.grPvawJNNXoikE7tLVf-Fq3rglXJjwdfpYGjdmYlL7s';
-    var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // 定数
     var STYLES = [
@@ -85,146 +78,6 @@
       { title: 'STEP 4: 生成！', content: 'ストーリーを入力して\n「漫画を生成」ボタンをクリック！\n\n複数枚の同時生成もできます。\nさあ、始めましょう！' }
     ];
 
-    // 認証フォーム
-    function AuthForm() {
-      var s1 = useState(false); var isSignUp = s1[0], setIsSignUp = s1[1];
-      var s2 = useState(''); var email = s2[0], setEmail = s2[1];
-      var s3 = useState(''); var password = s3[0], setPassword = s3[1];
-      var s4 = useState(''); var fullName = s4[0], setFullName = s4[1];
-      var s5 = useState(false); var loading = s5[0], setLoading = s5[1];
-      var s6 = useState(''); var error = s6[0], setError = s6[1];
-
-      async function handleSignUp() {
-        if (!fullName || !email || !password) {
-          setError('すべてのフィールドを入力してください');
-          return;
-        }
-        if (password.length < 8) {
-          setError('パスワードは8文字以上にしてください');
-          return;
-        }
-
-        setLoading(true);
-        setError('');
-
-        var result = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: { full_name: fullName }
-          }
-        });
-
-        if (result.error) {
-          setError(result.error.message);
-        } else {
-          alert('登録完了！ログインしてください。');
-          setIsSignUp(false);
-          setEmail('');
-          setPassword('');
-          setFullName('');
-        }
-        setLoading(false);
-      }
-
-      async function handleSignIn() {
-        if (!email || !password) {
-          setError('メールアドレスとパスワードを入力してください');
-          return;
-        }
-
-        setLoading(true);
-        setError('');
-
-        var result = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
-        if (result.error) {
-          setError(result.error.message);
-        }
-        setLoading(false);
-      }
-
-      return html`
-        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-          <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-            <h1 class="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              漫画生成ツール
-            </h1>
-            <p class="text-center text-gray-600 mb-8">
-              ${isSignUp ? '新規登録' : 'ログイン'}
-            </p>
-
-            ${error && html`
-              <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                ${error}
-              </div>
-            `}
-
-            <div class="space-y-4">
-              ${isSignUp && html`
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">お名前 *</label>
-                  <input
-                    type="text"
-                    value=${fullName}
-                    onInput=${(e) => setFullName(e.target.value)}
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="山田太郎"
-                    required
-                  />
-                </div>
-              `}
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">メールアドレス *</label>
-                <input
-                  type="email"
-                  value=${email}
-                  onInput=${(e) => setEmail(e.target.value)}
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="example@email.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">パスワード *</label>
-                <input
-                  type="password"
-                  value=${password}
-                  onInput=${(e) => setPassword(e.target.value)}
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="8文字以上"
-                  required
-                />
-                ${isSignUp && html`
-                  <p class="text-xs text-gray-500 mt-1">8文字以上で入力してください</p>
-                `}
-              </div>
-
-              <button
-                onClick=${isSignUp ? handleSignUp : handleSignIn}
-                disabled=${loading}
-                class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              >
-                ${loading ? '処理中...' : (isSignUp ? '登録する' : 'ログイン')}
-              </button>
-
-              <button
-                onClick=${() => setIsSignUp(!isSignUp)}
-                class="w-full text-sm text-gray-600 hover:text-gray-800"
-              >
-                ${isSignUp ? 'すでにアカウントをお持ちの方はこちら' : 'アカウントをお持ちでない方はこちら'}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
     // ヘルプアイコン
     function HelpIcon(props) {
       return html`
@@ -252,10 +105,8 @@
       `;
     }
 
-    // 漫画生成アプリ（ログイン後）
-    function MangaApp(props) {
-      var user = props.user;
-      var onSignOut = props.onSignOut;
+    // メインアプリ
+    function App() {
       var s1 = useState(''); var apiKey = s1[0], setApiKey = s1[1];
       var s2 = useState(false); var apiSaved = s2[0], setApiSaved = s2[1];
       var s3 = useState(false); var showApi = s3[0], setShowApi = s3[1];
@@ -1195,21 +1046,6 @@
               <button class="md:hidden text-gray-500 text-2xl" onClick=${function() { setSidebar(false); }}>×</button>
             </div>
 
-            <div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <div class="text-xs text-gray-500">ログイン中</div>
-                  <div class="text-sm font-medium text-gray-800">${user.user_metadata?.full_name || user.email}</div>
-                </div>
-                <button
-                  onClick=${onSignOut}
-                  class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  ログアウト
-                </button>
-              </div>
-            </div>
-
             <div class="flex gap-2 mb-6 text-sm">
               <button onClick=${function() { setShowTut(true); }} class="text-blue-500 hover:underline">使い方</button>
               <span class="text-gray-300">|</span>
@@ -1761,51 +1597,6 @@
           <//>
         </div>
       `;
-    }
-
-    // 認証ラッパー（メインApp）
-    function App() {
-      var s1 = useState(null); var user = s1[0], setUser = s1[1];
-      var s2 = useState(true); var loading = s2[0], setLoading = s2[1];
-
-      useEffect(function() {
-        // 現在のセッションを確認
-        supabase.auth.getSession().then(function(result) {
-          setUser(result.data.session?.user || null);
-          setLoading(false);
-        });
-
-        // 認証状態の変更を監視
-        var subscription = supabase.auth.onAuthStateChange(function(_event, session) {
-          setUser(session?.user || null);
-        });
-
-        return function() { subscription.data.subscription.unsubscribe(); };
-      }, []);
-
-      async function handleSignOut() {
-        await supabase.auth.signOut();
-      }
-
-      // 読み込み中
-      if (loading) {
-        return html`
-          <div class="min-h-screen flex items-center justify-center bg-gray-50">
-            <div class="text-center">
-              <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p class="text-gray-600">読み込み中...</p>
-            </div>
-          </div>
-        `;
-      }
-
-      // 未ログインの場合は認証画面を表示
-      if (!user) {
-        return html`<${AuthForm} />`;
-      }
-
-      // ログイン済みの場合は漫画生成アプリを表示
-      return html`<${MangaApp} user=${user} onSignOut=${handleSignOut} />`;
     }
 
     ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(App));
