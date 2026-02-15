@@ -984,7 +984,7 @@
       var s50 = useState(''); var newStyleTitle = s50[0], setNewStyleTitle = s50[1];
       var s51 = useState(''); var newStyleDesc = s51[0], setNewStyleDesc = s51[1];
       var s52 = useState(''); var newStylePrompt = s52[0], setNewStylePrompt = s52[1];
-      var s53 = useState(false); var enableSubChars = s53[0], setEnableSubChars = s53[1];
+      var s53 = useState(true); var enableSubChars = s53[0], setEnableSubChars = s53[1];
       var s54 = useState([{name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}]); var charDetails = s54[0], setCharDetails = s54[1];
       var s55 = useState(false); var showCharDetail = s55[0], setShowCharDetail = s55[1];
       var s56 = useState(0); var charDetailIdx = s56[0], setCharDetailIdx = s56[1];
@@ -1051,8 +1051,6 @@
           if (m) setGenMode(m);
           var ca = localStorage.getItem('manga_char_absent_count');
           if (ca) setCharAbsentCount(parseInt(ca, 10));
-          var sc = localStorage.getItem('manga_enable_sub_chars');
-          if (sc) setEnableSubChars(sc === 'true');
           var cd = localStorage.getItem('manga_char_details');
           if (cd) setCharDetails(JSON.parse(cd));
         } catch(e) { console.error(e); }
@@ -2322,24 +2320,6 @@
               </button>
               <div class="accordion-content ${showAdvancedSettings ? 'open' : ''}">
                 <div class="py-2 space-y-4">
-
-                  <div>
-                    <div class="text-sm font-medium text-gray-700 mb-2">サブキャラクター自動生成</div>
-                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
-                      <input
-                        type="checkbox"
-                        checked=${enableSubChars}
-                        onChange=${function(e) {
-                          setEnableSubChars(e.target.checked);
-                          localStorage.setItem('manga_enable_sub_chars', e.target.checked);
-                        }}
-                        class="mr-2"
-                      />
-                      <div class="flex-1">
-                        <div class="text-xs text-gray-600">ストーリーに登場する追加キャラクター（お客様、店員など）をAIが自動生成して登場させます</div>
-                      </div>
-                    </label>
-                  </div>
 
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-2">セリフスタイル</div>
