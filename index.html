@@ -303,6 +303,11 @@
       var s45 = useState('simple'); var genMode = s45[0], setGenMode = s45[1];
       var s46 = useState(0); var modalImgIdx = s46[0], setModalImgIdx = s46[1];
       var s47 = useState(1); var charAbsentCount = s47[0], setCharAbsentCount = s47[1];
+      var s48 = useState([]); var customStyles = s48[0], setCustomStyles = s48[1];
+      var s49 = useState(false); var showAddStyle = s49[0], setShowAddStyle = s49[1];
+      var s50 = useState(''); var newStyleTitle = s50[0], setNewStyleTitle = s50[1];
+      var s51 = useState(''); var newStyleDesc = s51[0], setNewStyleDesc = s51[1];
+      var s52 = useState(''); var newStylePrompt = s52[0], setNewStylePrompt = s52[1];
       var s48 = useState(false); var enableSubChars = s48[0], setEnableSubChars = s48[1];
       var s49 = useState([{name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}]); var charDetails = s49[0], setCharDetails = s49[1];
       var s50 = useState(false); var showCharDetail = s50[0], setShowCharDetail = s50[1];
@@ -365,6 +370,23 @@
           if (cd) setCharDetails(JSON.parse(cd));
         } catch(e) { console.error(e); }
       }, []);
+
+      // カスタムスタイル読み込み
+      useEffect(function() {
+        if (!user) return;
+        supabase
+          .from('custom_styles')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .then(function(result) {
+            if (result.error) {
+              console.error('カスタムスタイル読み込みエラー:', result.error);
+            } else {
+              setCustomStyles(result.data || []);
+            }
+          });
+      }, [user]);
 
       // ファイル名パース: "01_分析_text.txt" → { order: 1, name: "分析", type: "text" }
       function parseFileName(filename) {
@@ -579,6 +601,77 @@
         });
       }
 
+      function addCustomStyle() {
+        if (!newStyleTitle || !newStylePrompt) {
+          alert('タイトルとプロンプトは必須です');
+          return;
+        }
+
+        console.log('カスタムスタイル追加開始:', { title: newStyleTitle, user_id: user.id });
+
+        supabase
+          .from('custom_styles')
+          .insert([{
+            user_id: user.id,
+            title: newStyleTitle,
+            description: newStyleDesc,
+            prompt: newStylePrompt
+          }])
+          .then(function(result) {
+            console.log('Insert結果:', result);
+            if (result.error) {
+              console.error('カスタムスタイル保存エラー:', result.error);
+              alert('保存に失敗しました:\n' + result.error.message + '\n\n【確認事項】\n1. Supabaseでcustom_stylesテーブルを作成しましたか？\n2. ブラウザのコンソール(F12)でエラーを確認してください');
+              return;
+            }
+            // 再読み込み
+            return supabase
+              .from('custom_styles')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false });
+          })
+          .then(function(result) {
+            if (result && !result.error) {
+              console.log('カスタムスタイル読み込み成功:', result.data);
+              setCustomStyles(result.data || []);
+              setShowAddStyle(false);
+              setNewStyleTitle('');
+              setNewStyleDesc('');
+              setNewStylePrompt('');
+              alert('カスタムスタイルを追加しました');
+            } else if (result && result.error) {
+              console.error('読み込みエラー:', result.error);
+            }
+          })
+          .catch(function(error) {
+            console.error('予期しないエラー:', error);
+            alert('予期しないエラーが発生しました:\n' + error.message);
+          });
+      }
+
+      function delCustomStyle(id) {
+        if (!confirm('このカスタムスタイルを削除しますか？')) return;
+
+        supabase
+          .from('custom_styles')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .then(function(result) {
+            if (result.error) {
+              console.error('削除エラー:', result.error);
+              alert('削除に失敗しました');
+            } else {
+              setCustomStyles(customStyles.filter(function(s) { return s.id !== id; }));
+              // 削除したスタイルが選択されていた場合はデフォルトに戻す
+              if (style === 'custom_' + id) {
+                setStyle(1);
+              }
+            }
+          });
+      }
+
       function delChar(id) {
         if (!confirm('削除しますか？')) return;
         var ncs = chars.filter(function(c) { return c.id !== id; });
@@ -738,8 +831,24 @@
         return result;
       }
 
+      // すべてのスタイル（既定 + カスタム）を取得
+      function getAllStyles() {
+        var customStylesFormatted = customStyles.map(function(cs) {
+          return {
+            id: 'custom_' + cs.id,
+            name: cs.title,
+            desc: cs.description || '',
+            prompt: cs.prompt,
+            custom: true,
+            dbId: cs.id
+          };
+        });
+        return STYLES.concat(customStylesFormatted);
+      }
+
       function genPrompt() {
-        var st = STYLES.find(function(s) { return s.id === style; });
+        var allStyles = getAllStyles();
+        var st = allStyles.find(function(s) { return s.id === style; });
         var hasC = selChars[1] !== null;
         var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
         var spch = speech === 'formal' ? '敬語（です・ます調）を基本とし、同じ語尾が連続しないよう3種類以上使い分ける' : 'タメ口（カジュアル）を基本とし、親しみやすく、語尾を3種類以上使い分ける';
@@ -750,7 +859,8 @@
 
       // 共通変数を取得
       function getCommonVars() {
-        var st = STYLES.find(function(s) { return s.id === style; });
+        var allStyles = getAllStyles();
+        var st = allStyles.find(function(s) { return s.id === style; });
         var hasC = selChars[1] !== null;
         var spt = (style === 99 && styleRef) ? '添付された参照画像の絵柄・色使い・雰囲気に忠実に合わせてください。' : st.prompt;
 
@@ -1159,7 +1269,22 @@
       function compTut() { localStorage.setItem('manga_tut_seen', '1'); setShowTut(false); setTutStep(0); }
       function togAccord(k) { setAccord(accord.indexOf(k) >= 0 ? accord.filter(function(x) { return x !== k; }) : accord.concat([k])); }
 
-      var sortedStyles = STYLES.slice().sort(function(a, b) {
+      // カスタムスタイルをSTYLES形式に変換
+      var customStylesFormatted = customStyles.map(function(cs) {
+        return {
+          id: 'custom_' + cs.id,
+          name: cs.title,
+          desc: cs.description || '',
+          prompt: cs.prompt,
+          custom: true,
+          dbId: cs.id
+        };
+      });
+
+      // すべてのスタイル（既定 + カスタム）
+      var allStyles = STYLES.concat(customStylesFormatted);
+
+      var sortedStyles = allStyles.slice().sort(function(a, b) {
         var aF = favStyles.indexOf(a.id) >= 0, bF = favStyles.indexOf(b.id) >= 0;
         return aF && !bF ? -1 : !aF && bF ? 1 : 0;
       });
@@ -1300,8 +1425,15 @@
               </button>
               <div class="accordion-content ${accord.indexOf('style') >= 0 ? 'open' : ''}">
                 <div class="max-h-48 overflow-y-auto py-2 scrollbar-thin">
-                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${s.name}</div><div class="text-xs text-gray-500">${s.desc}</div></div>${s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
+                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${s.name}${s.custom ? ' 🎨' : ''}</div><div class="text-xs text-gray-500">${s.desc}</div></div>${s.custom ? html`<button onClick=${function(e) { e.preventDefault(); e.stopPropagation(); delCustomStyle(s.dbId); }} class="text-red-500 hover:text-red-700 ml-2 text-sm">削除</button>` : s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
                 </div>
+                <button
+                  onClick=${function() { setShowAddStyle(true); }}
+                  class="w-full mt-2 p-2 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span class="text-xl">+</span>
+                  <span class="text-sm">カスタムスタイル追加</span>
+                </button>
                 ${style === 99 && html`<div class="mt-2 p-2 border border-dashed rounded-lg"><div class="text-xs text-gray-500 mb-2">参照画像</div>${styleRef ? html`<div class="relative inline-block"><img src=${styleRef.img} class="h-16 rounded" /><button onClick=${function() { setStyleRef(null); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<button onClick=${function() { styleRefInput.current && styleRefInput.current.click(); }} class="text-sm text-blue-500">+ 画像選択</button>`}<input ref=${styleRefInput} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setStyleRef({ img: ev.target.result }); }; r.readAsDataURL(f); }} /></div>`}
               </div>
             </div>
@@ -1566,6 +1698,58 @@
             <p class="text-sm text-gray-600 mb-4">現在の設定を保存します</p>
             <input type="text" value=${newProjName} onInput=${function(e) { setNewProjName(e.target.value); }} placeholder="プロジェクト名" class="w-full px-3 py-2 border rounded-lg mb-4" />
             <div class="flex gap-3"><button onClick=${function() { setShowAddProj(false); setNewProjName(''); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${saveProj} disabled=${!newProjName} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">保存</button></div>
+          <//>
+
+          <${Modal} isOpen=${showAddStyle} onClose=${function() { setShowAddStyle(false); setNewStyleTitle(''); setNewStyleDesc(''); setNewStylePrompt(''); }} title="カスタムスタイル追加" size="md">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">タイトル *</label>
+                <input
+                  type="text"
+                  value=${newStyleTitle}
+                  onInput=${function(e) { setNewStyleTitle(e.target.value); }}
+                  placeholder="例: アニメ風"
+                  class="w-full px-3 py-2 border rounded-lg"
+                  maxLength="50"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">説明</label>
+                <input
+                  type="text"
+                  value=${newStyleDesc}
+                  onInput=${function(e) { setNewStyleDesc(e.target.value); }}
+                  placeholder="例: ジブリ作品のような温かみのあるアニメ風"
+                  class="w-full px-3 py-2 border rounded-lg"
+                  maxLength="100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">プロンプト *</label>
+                <textarea
+                  value=${newStylePrompt}
+                  onInput=${function(e) { setNewStylePrompt(e.target.value); }}
+                  placeholder="例: Studio Ghibli anime illustration style with warm watercolor backgrounds..."
+                  class="w-full px-3 py-2 border rounded-lg h-32 resize-none"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">画像生成に使用されるプロンプトを入力してください</p>
+              </div>
+              <div class="flex gap-3">
+                <button
+                  onClick=${function() { setShowAddStyle(false); setNewStyleTitle(''); setNewStyleDesc(''); setNewStylePrompt(''); }}
+                  class="flex-1 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick=${addCustomStyle}
+                  disabled=${!newStyleTitle || !newStylePrompt}
+                  class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600"
+                >
+                  追加
+                </button>
+              </div>
+            </div>
           <//>
 
           ${showImg && html`
