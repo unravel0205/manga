@@ -744,6 +744,8 @@
     var HELP = {
       api: '【APIキー取得手順】\n\n1. https://aistudio.google.com/ にアクセス\n2. Googleアカウントでログイン\n3. 左メニュー「Get API Key」をクリック\n4. 「Create API Key」をクリック\n5. 表示されたキーをコピー（AIza...で始まる）\n6. このアプリに貼り付けて「保存」\n\n※キーは他人に共有しないでください',
       model: '【モデル選択】\n\n■ 高品質 4K（有料）\n$0.24/枚（約36円）最高品質\n\n■ 高品質 2K（有料）\n$0.134/枚（約20円）高品質\n\n■ 標準（無料）\n1日500枚まで無料',
+      project: '【プロジェクト】\n\nキャラクター・スタイル・設定を\nまとめて保存できます。\n\n■ 保存方法\n設定後、右上メニューから\n「プロジェクト保存」\n\n■ 操作\n・クリック：読み込み\n・ホバー：エクスポート・削除\n・↓：ファイルから読み込み',
+      library: '【キャラクターライブラリ】\n\n登録したキャラクターを\n保存・管理できます。\n\n■ 登録方法\n+ボタンから画像をアップロード\n\n■ 使い方\nクリックで「今回のキャラクター」に追加\n\n■ 編集・削除\nキャラクターにホバーで表示',
       character: '【キャラクター設定】\n\n■ 説明者（必須）\nメインで話を進めるキャラ\n\n■ 相談者（任意）\n質問役。設定すると会話形式に\n\n■ 参考3・4（任意）\n漫画に登場させたい写真など',
       style: '【絵のテイスト】\n絵柄を選択できます。\nドラッグで並び替え可能。\n「画像から参照」で添付画像に合わせます。',
       story: '【入力のコツ】\n・100〜500文字程度が目安\n・箇条書きでもOK\n・感情を入れると表現豊かに'
@@ -996,8 +998,13 @@
       var s64 = useState(''); var editStylePrompt = s64[0], setEditStylePrompt = s64[1];
       var s65 = useState(null); var draggedStyle = s65[0], setDraggedStyle = s65[1];
       var s66 = useState([]); var styleOrder = s66[0], setStyleOrder = s66[1];
+      var s67 = useState(false); var showEditChar = s67[0], setShowEditChar = s67[1];
+      var s68 = useState(null); var editingCharId = s68[0], setEditingCharId = s68[1];
+      var s69 = useState(''); var editCharName = s69[0], setEditCharName = s69[1];
+      var s70 = useState(null); var editCharImg = s70[0], setEditCharImg = s70[1];
 
       var fileRef = useRef(null);
+      var editFileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
       var styleRefInput = useRef(null);
       var cancelRef = useRef(false);
@@ -1467,6 +1474,46 @@
         setChars(ncs);
         localStorage.setItem('manga_chars', JSON.stringify(ncs));
         setSelChars(selChars.map(function(c) { return c && c.id === id ? null : c; }));
+      }
+
+      function editChar(c) {
+        setEditingCharId(c.id);
+        setEditCharName(c.name);
+        setEditCharImg(c.img);
+        setShowEditChar(true);
+      }
+
+      function updateChar() {
+        if (!editCharName.trim()) {
+          alert('キャラクター名を入力してください');
+          return;
+        }
+        if (!editCharImg) {
+          alert('画像を選択してください');
+          return;
+        }
+
+        var ncs = chars.map(function(c) {
+          if (c.id === editingCharId) {
+            return { id: c.id, name: editCharName, img: editCharImg };
+          }
+          return c;
+        });
+        setChars(ncs);
+        localStorage.setItem('manga_chars', JSON.stringify(ncs));
+
+        // 選択中のキャラクターも更新
+        setSelChars(selChars.map(function(c) {
+          if (c && c.id === editingCharId) {
+            return { id: editingCharId, name: editCharName, img: editCharImg };
+          }
+          return c;
+        }));
+
+        setShowEditChar(false);
+        setEditingCharId(null);
+        setEditCharName('');
+        setEditCharImg(null);
       }
 
       function handleFile(e, idx) {
@@ -2140,7 +2187,10 @@
 
             <div class="mb-4">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-gray-700">プロジェクト</span>
+                <div class="flex items-center">
+                  <span class="text-sm font-semibold text-gray-700">プロジェクト</span>
+                  <${HelpIcon} text=${HELP.project} />
+                </div>
                 <div class="flex gap-1">
                   ${curProj && html`<button onClick=${clearProj} class="text-xs text-gray-500 hover:text-gray-700" title="選択解除">解除</button>`}
                   <button onClick=${importProj} class="text-xs text-blue-500 hover:text-blue-700" title="インポート">↓</button>
@@ -2177,12 +2227,43 @@
 
             <div class="mb-4">
               <button onClick=${function() { togAccord('lib'); }} class="flex items-center justify-between w-full text-left">
-                <span class="text-sm font-semibold text-gray-700">キャラクターライブラリ</span>
+                <div class="flex items-center">
+                  <span class="text-sm font-semibold text-gray-700">キャラクターライブラリ</span>
+                  <${HelpIcon} text=${HELP.library} />
+                </div>
                 <span class="text-gray-400">${accord.indexOf('lib') >= 0 ? '▼' : '▶'}</span>
               </button>
               <div class="accordion-content ${accord.indexOf('lib') >= 0 ? 'open' : ''}">
                 <div class="flex gap-2 overflow-x-auto py-2 scrollbar-thin">
-                  ${chars.map(function(c) { return html`<div key=${c.id} class="flex-shrink-0 w-14 cursor-pointer" onContextMenu=${function(e) { e.preventDefault(); delChar(c.id); }}><img src=${c.img} class="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400" onClick=${function() { var idx = selChars.findIndex(function(x) { return x === null; }); if (idx >= 0) { var nc = selChars.slice(); nc[idx] = c; setSelChars(nc); } }} /><div class="text-xs text-center mt-1 truncate">${c.name}</div></div>`; })}
+                  ${chars.map(function(c) {
+                    return html`
+                      <div key=${c.id} class="relative flex-shrink-0 group">
+                        <div class="cursor-pointer" onClick=${function() {
+                          var idx = selChars.findIndex(function(x) { return x === null; });
+                          if (idx >= 0) {
+                            var nc = selChars.slice();
+                            nc[idx] = c;
+                            setSelChars(nc);
+                          }
+                        }}>
+                          <img src=${c.img} class="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400" />
+                          <div class="text-xs text-center mt-1 truncate" style="width: 56px;">${c.name}</div>
+                        </div>
+                        <div class="absolute -top-1 -right-1 hidden group-hover:flex gap-1" style="z-index: 10;">
+                          <button
+                            onClick=${function(e) { e.stopPropagation(); editChar(c); }}
+                            class="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-blue-600"
+                            title="編集"
+                          >✎</button>
+                          <button
+                            onClick=${function(e) { e.stopPropagation(); delChar(c.id); }}
+                            class="w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                            title="削除"
+                          >×</button>
+                        </div>
+                      </div>
+                    `;
+                  })}
                   <button onClick=${function() { setShowAddChar(true); }} class="flex-shrink-0 w-14 h-14 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">+</button>
                 </div>
               </div>
@@ -2545,6 +2626,13 @@
             <div class="border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer" onClick=${function() { fileRef.current && fileRef.current.click(); }}>${newCharImg ? html`<img src=${newCharImg} class="max-h-32 mx-auto rounded" />` : html`<div class="text-gray-400"><div class="text-3xl mb-2">+</div><div>画像を選択</div></div>`}</div>
             <input ref=${fileRef} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setNewCharImg(ev.target.result); }; r.readAsDataURL(f); }} />
             <div class="flex gap-3"><button onClick=${function() { setShowAddChar(false); setNewCharName(''); setNewCharImg(null); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${addChar} disabled=${!newCharName || !newCharImg} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">追加</button></div>
+          <//>
+
+          <${Modal} isOpen=${showEditChar} onClose=${function() { setShowEditChar(false); setEditingCharId(null); setEditCharName(''); setEditCharImg(null); }} title="キャラクター編集" size="sm">
+            <input type="text" value=${editCharName} onInput=${function(e) { setEditCharName(e.target.value); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <div class="border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer" onClick=${function() { editFileRef.current && editFileRef.current.click(); }}>${editCharImg ? html`<img src=${editCharImg} class="max-h-32 mx-auto rounded" />` : html`<div class="text-gray-400"><div class="text-3xl mb-2">+</div><div>画像を選択</div></div>`}</div>
+            <input ref=${editFileRef} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { compressImage(ev.target.result, 500, 0.7).then(function(compressed) { setEditCharImg(compressed); }); }; r.readAsDataURL(f); }} />
+            <div class="flex gap-3"><button onClick=${function() { setShowEditChar(false); setEditingCharId(null); setEditCharName(''); setEditCharImg(null); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${updateChar} disabled=${!editCharName || !editCharImg} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">更新</button></div>
           <//>
 
           <${Modal} isOpen=${showAddProj} onClose=${function() { setShowAddProj(false); setNewProjName(''); }} title="プロジェクト保存" size="sm">
