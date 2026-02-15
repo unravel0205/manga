@@ -308,12 +308,20 @@
       var s50 = useState(''); var newStyleTitle = s50[0], setNewStyleTitle = s50[1];
       var s51 = useState(''); var newStyleDesc = s51[0], setNewStyleDesc = s51[1];
       var s52 = useState(''); var newStylePrompt = s52[0], setNewStylePrompt = s52[1];
-      var s48 = useState(false); var enableSubChars = s48[0], setEnableSubChars = s48[1];
-      var s49 = useState([{name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}]); var charDetails = s49[0], setCharDetails = s49[1];
-      var s50 = useState(false); var showCharDetail = s50[0], setShowCharDetail = s50[1];
-      var s51 = useState(0); var charDetailIdx = s51[0], setCharDetailIdx = s51[1];
-      var s52 = useState(false); var showPanelHelp = s52[0], setShowPanelHelp = s52[1];
-      var s53 = useState(false); var showAdvancedSettings = s53[0], setShowAdvancedSettings = s53[1];
+      var s53 = useState(false); var enableSubChars = s53[0], setEnableSubChars = s53[1];
+      var s54 = useState([{name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}, {name: '', features: ''}]); var charDetails = s54[0], setCharDetails = s54[1];
+      var s55 = useState(false); var showCharDetail = s55[0], setShowCharDetail = s55[1];
+      var s56 = useState(0); var charDetailIdx = s56[0], setCharDetailIdx = s56[1];
+      var s57 = useState(false); var showPanelHelp = s57[0], setShowPanelHelp = s57[1];
+      var s58 = useState(false); var showAdvancedSettings = s58[0], setShowAdvancedSettings = s58[1];
+      var s59 = useState(false); var showUserMenu = s59[0], setShowUserMenu = s59[1];
+      var s60 = useState(false); var showEditStyle = s60[0], setShowEditStyle = s60[1];
+      var s61 = useState(null); var editingStyleId = s61[0], setEditingStyleId = s61[1];
+      var s62 = useState(''); var editStyleTitle = s62[0], setEditStyleTitle = s62[1];
+      var s63 = useState(''); var editStyleDesc = s63[0], setEditStyleDesc = s63[1];
+      var s64 = useState(''); var editStylePrompt = s64[0], setEditStylePrompt = s64[1];
+      var s65 = useState(null); var draggedStyle = s65[0], setDraggedStyle = s65[1];
+      var s66 = useState([]); var styleOrder = s66[0], setStyleOrder = s66[1];
 
       var fileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
@@ -387,6 +395,14 @@
             }
           });
       }, [user]);
+
+      // スタイル並び順の読み込み
+      useEffect(function() {
+        try {
+          var order = localStorage.getItem('manga_style_order');
+          if (order) setStyleOrder(JSON.parse(order));
+        } catch(e) { console.error(e); }
+      }, []);
 
       // ファイル名パース: "01_分析_text.txt" → { order: 1, name: "分析", type: "text" }
       function parseFileName(filename) {
@@ -670,6 +686,91 @@
               }
             }
           });
+      }
+
+      function editCustomStyle(id) {
+        var cs = customStyles.find(function(s) { return s.id === id; });
+        if (!cs) return;
+
+        setEditingStyleId(id);
+        setEditStyleTitle(cs.title);
+        setEditStyleDesc(cs.description || '');
+        setEditStylePrompt(cs.prompt);
+        setShowEditStyle(true);
+      }
+
+      function updateCustomStyle() {
+        if (!editStyleTitle || !editStylePrompt) {
+          alert('タイトルとプロンプトは必須です');
+          return;
+        }
+
+        supabase
+          .from('custom_styles')
+          .update({
+            title: editStyleTitle,
+            description: editStyleDesc,
+            prompt: editStylePrompt
+          })
+          .eq('id', editingStyleId)
+          .eq('user_id', user.id)
+          .then(function(result) {
+            if (result.error) {
+              console.error('更新エラー:', result.error);
+              alert('更新に失敗しました');
+              return;
+            }
+            // 再読み込み
+            return supabase
+              .from('custom_styles')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false });
+          })
+          .then(function(result) {
+            if (result && !result.error) {
+              setCustomStyles(result.data || []);
+              setShowEditStyle(false);
+              setEditingStyleId(null);
+              setEditStyleTitle('');
+              setEditStyleDesc('');
+              setEditStylePrompt('');
+              alert('カスタムスタイルを更新しました');
+            } else if (result && result.error) {
+              console.error('読み込みエラー:', result.error);
+            }
+          });
+      }
+
+      function handleDragStart(e, styleId) {
+        setDraggedStyle(styleId);
+        e.dataTransfer.effectAllowed = 'move';
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }
+
+      function handleDrop(e, targetStyleId) {
+        e.preventDefault();
+        if (!draggedStyle || draggedStyle === targetStyleId) return;
+
+        var allStyles = getAllStyles();
+        var currentOrder = styleOrder.length > 0 ? styleOrder : allStyles.map(function(s) { return s.id; });
+
+        var draggedIdx = currentOrder.indexOf(draggedStyle);
+        var targetIdx = currentOrder.indexOf(targetStyleId);
+
+        if (draggedIdx === -1 || targetIdx === -1) return;
+
+        var newOrder = currentOrder.slice();
+        newOrder.splice(draggedIdx, 1);
+        newOrder.splice(targetIdx, 0, draggedStyle);
+
+        setStyleOrder(newOrder);
+        localStorage.setItem('manga_style_order', JSON.stringify(newOrder));
+        setDraggedStyle(null);
       }
 
       function delChar(id) {
@@ -1284,10 +1385,28 @@
       // すべてのスタイル（既定 + カスタム）
       var allStyles = STYLES.concat(customStylesFormatted);
 
-      var sortedStyles = allStyles.slice().sort(function(a, b) {
-        var aF = favStyles.indexOf(a.id) >= 0, bF = favStyles.indexOf(b.id) >= 0;
-        return aF && !bF ? -1 : !aF && bF ? 1 : 0;
-      });
+      var sortedStyles = allStyles.slice();
+
+      // styleOrderが存在する場合はそれに従ってソート、なければお気に入りでソート
+      if (styleOrder.length > 0) {
+        sortedStyles.sort(function(a, b) {
+          var aIdx = styleOrder.indexOf(a.id);
+          var bIdx = styleOrder.indexOf(b.id);
+          // 両方がstyleOrderに存在する場合はその順序
+          if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+          // aのみstyleOrderに存在する場合はaを先に
+          if (aIdx !== -1) return -1;
+          // bのみstyleOrderに存在する場合はbを先に
+          if (bIdx !== -1) return 1;
+          // どちらもstyleOrderに存在しない場合はIDで比較
+          return 0;
+        });
+      } else {
+        sortedStyles.sort(function(a, b) {
+          var aF = favStyles.indexOf(a.id) >= 0, bF = favStyles.indexOf(b.id) >= 0;
+          return aF && !bF ? -1 : !aF && bF ? 1 : 0;
+        });
+      }
 
       function calcUsage() {
         var now = new Date();
@@ -1318,29 +1437,6 @@
             <div class="flex items-center justify-between mb-6">
               <h1 class="text-xl font-bold text-gray-800">漫画クリエイター</h1>
               <button class="md:hidden text-gray-500 text-2xl" onClick=${function() { setSidebar(false); }}>×</button>
-            </div>
-
-            <div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <div class="text-xs text-gray-500">ログイン中</div>
-                  <div class="text-sm font-medium text-gray-800">${user.user_metadata?.full_name || user.email}</div>
-                </div>
-                <button
-                  onClick=${onSignOut}
-                  class="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  ログアウト
-                </button>
-              </div>
-            </div>
-
-            <div class="flex gap-2 mb-6 text-sm">
-              <button onClick=${function() { setShowTut(true); }} class="text-blue-500 hover:underline">使い方</button>
-              <span class="text-gray-300">|</span>
-              <button onClick=${function() { setShowSamp(true); }} class="text-blue-500 hover:underline">サンプル</button>
-              <span class="text-gray-300">|</span>
-              <button onClick=${function() { setShowUsage(true); }} class="text-blue-500 hover:underline">使用量</button>
             </div>
 
             <div class="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -1424,8 +1520,8 @@
                 <span class="text-gray-400">${accord.indexOf('style') >= 0 ? '▼' : '▶'}</span>
               </button>
               <div class="accordion-content ${accord.indexOf('style') >= 0 ? 'open' : ''}">
-                <div class="max-h-48 overflow-y-auto py-2 scrollbar-thin">
-                  ${sortedStyles.map(function(s) { return html`<label key=${s.id} class="flex items-center p-2 rounded-lg cursor-pointer ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${s.name}${s.custom ? ' 🎨' : ''}</div><div class="text-xs text-gray-500">${s.desc}</div></div>${s.custom ? html`<button onClick=${function(e) { e.preventDefault(); e.stopPropagation(); delCustomStyle(s.dbId); }} class="text-red-500 hover:text-red-700 ml-2 text-sm">削除</button>` : s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</label>`; })}
+                <div class="max-h-64 overflow-y-auto py-2 scrollbar-thin">
+                  ${sortedStyles.map(function(s) { return html`<div key=${s.id} draggable="true" onDragStart=${function(e) { handleDragStart(e, s.id); }} onDragOver=${handleDragOver} onDrop=${function(e) { handleDrop(e, s.id); }} class="flex items-center p-2 rounded-lg ${style === s.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'} ${draggedStyle === s.id ? 'opacity-50' : ''}"><div class="cursor-move mr-2 text-gray-400 hover:text-gray-600" onMouseDown=${function(e) { e.stopPropagation(); }}>☰</div><label class="flex items-center flex-1 cursor-pointer"><input type="radio" name="style" checked=${style === s.id} onChange=${function() { setStyle(s.id); }} class="mr-2" /><div class="flex-1"><div class="text-sm">${s.name}</div><div class="text-xs text-gray-500">${s.desc}</div></div></label>${s.custom ? html`<div class="flex gap-2"><button onClick=${function(e) { e.preventDefault(); e.stopPropagation(); editCustomStyle(s.dbId); }} class="text-blue-500 hover:text-blue-700 text-sm">編集</button><button onClick=${function(e) { e.preventDefault(); e.stopPropagation(); delCustomStyle(s.dbId); }} class="text-red-500 hover:text-red-700 text-sm">削除</button></div>` : s.id !== 99 && html`<button onClick=${function(e) { e.preventDefault(); toggleFavStyle(s.id); }} class="${favStyles.indexOf(s.id) >= 0 ? 'text-yellow-500' : 'text-gray-300'}">${favStyles.indexOf(s.id) >= 0 ? '★' : '☆'}</button>`}</div>`; })}
                 </div>
                 <button
                   onClick=${function() { setShowAddStyle(true); }}
@@ -1555,7 +1651,75 @@
             <div class="md:hidden flex items-center justify-between mb-4">
               <button onClick=${function() { setSidebar(true); }} class="text-2xl">☰</button>
               <h1 class="text-lg font-bold">漫画クリエイター</h1>
-              <div class="w-8"></div>
+              <div class="relative">
+                <button
+                  onClick=${function() { setShowUserMenu(!showUserMenu); }}
+                  class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold hover:shadow-lg transition-shadow"
+                >
+                  ${(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                </button>
+                ${showUserMenu && html`
+                  <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                    <div class="px-4 py-2 border-b border-gray-100">
+                      <div class="text-xs text-gray-500">ログイン中</div>
+                      <div class="text-sm font-medium text-gray-800 truncate">${user.user_metadata?.full_name || user.email}</div>
+                    </div>
+                    <button onClick=${function() { setShowTut(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2">
+                      <span>📖</span>
+                      <span>使い方</span>
+                    </button>
+                    <button onClick=${function() { setShowSamp(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2">
+                      <span>🎨</span>
+                      <span>サンプル</span>
+                    </button>
+                    <button onClick=${function() { setShowUsage(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2">
+                      <span>📊</span>
+                      <span>使用量</span>
+                    </button>
+                    <div class="border-t border-gray-100 mt-1"></div>
+                    <button onClick=${function() { onSignOut(); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                      <span>🚪</span>
+                      <span>ログアウト</span>
+                    </button>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <div class="hidden md:flex items-center justify-end mb-4 px-2">
+              <div class="relative">
+                <button
+                  onClick=${function() { setShowUserMenu(!showUserMenu); }}
+                  class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center text-base font-bold hover:shadow-lg transition-shadow"
+                >
+                  ${(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                </button>
+                ${showUserMenu && html`
+                  <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                    <div class="px-4 py-3 border-b border-gray-100">
+                      <div class="text-xs text-gray-500">ログイン中</div>
+                      <div class="text-sm font-medium text-gray-800 truncate">${user.user_metadata?.full_name || user.email}</div>
+                    </div>
+                    <button onClick=${function() { setShowTut(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-3">
+                      <span class="text-lg">📖</span>
+                      <span>使い方</span>
+                    </button>
+                    <button onClick=${function() { setShowSamp(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-3">
+                      <span class="text-lg">🎨</span>
+                      <span>サンプル</span>
+                    </button>
+                    <button onClick=${function() { setShowUsage(true); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-3">
+                      <span class="text-lg">📊</span>
+                      <span>使用量</span>
+                    </button>
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <button onClick=${function() { onSignOut(); setShowUserMenu(false); }} class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
+                      <span class="text-lg">🚪</span>
+                      <span>ログアウト</span>
+                    </button>
+                  </div>
+                `}
+              </div>
             </div>
 
             <div class="mb-6">
@@ -1747,6 +1911,58 @@
                   class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600"
                 >
                   追加
+                </button>
+              </div>
+            </div>
+          <//>
+
+          <${Modal} isOpen=${showEditStyle} onClose=${function() { setShowEditStyle(false); setEditingStyleId(null); setEditStyleTitle(''); setEditStyleDesc(''); setEditStylePrompt(''); }} title="カスタムスタイル編集" size="md">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">タイトル *</label>
+                <input
+                  type="text"
+                  value=${editStyleTitle}
+                  onInput=${function(e) { setEditStyleTitle(e.target.value); }}
+                  placeholder="例: アニメ風"
+                  class="w-full px-3 py-2 border rounded-lg"
+                  maxLength="50"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">説明</label>
+                <input
+                  type="text"
+                  value=${editStyleDesc}
+                  onInput=${function(e) { setEditStyleDesc(e.target.value); }}
+                  placeholder="例: ジブリ作品のような温かみのあるアニメ風"
+                  class="w-full px-3 py-2 border rounded-lg"
+                  maxLength="100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">プロンプト *</label>
+                <textarea
+                  value=${editStylePrompt}
+                  onInput=${function(e) { setEditStylePrompt(e.target.value); }}
+                  placeholder="例: Studio Ghibli anime illustration style with warm watercolor backgrounds..."
+                  class="w-full px-3 py-2 border rounded-lg h-32 resize-none"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">画像生成に使用されるプロンプトを入力してください</p>
+              </div>
+              <div class="flex gap-3">
+                <button
+                  onClick=${function() { setShowEditStyle(false); setEditingStyleId(null); setEditStyleTitle(''); setEditStyleDesc(''); setEditStylePrompt(''); }}
+                  class="flex-1 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick=${updateCustomStyle}
+                  disabled=${!editStyleTitle || !editStylePrompt}
+                  class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600"
+                >
+                  更新
                 </button>
               </div>
             </div>
