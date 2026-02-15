@@ -7,21 +7,211 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s; }
-    .tooltip-trigger:hover .tooltip { visibility: visible; opacity: 1; }
-    .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-    .accordion-content.open { max-height: 2000px; }
+    /* デザインシステム - CSS変数定義 */
+    :root {
+      /* カラーパレット - B案: モダン&プロフェッショナル */
+      --color-primary: #0066CC;
+      --color-secondary: #00A3E0;
+      --color-accent: #4A9EFF;
+      --color-bg-base: #FFFFFF;
+      --color-bg-subtle: #F8FBFF;
+      --color-bg-muted: #E8F1F8;
+      --color-text-primary: #1A2332;
+      --color-text-secondary: #64748B;
+      --color-text-muted: #94A3B8;
+      --color-border: #E8F1F8;
+      --color-white: #FFFFFF;
+
+      /* グラデーション */
+      --gradient-primary: linear-gradient(135deg, #0066CC 0%, #00A3E0 100%);
+      --gradient-subtle: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,251,255,0.95) 100%);
+
+      /* シャドウ - B案: 柔らかく大きめ */
+      --shadow-sm: 0 2px 8px rgba(0, 102, 204, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 102, 204, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 102, 204, 0.12);
+      --shadow-xl: 0 16px 48px rgba(0, 102, 204, 0.16);
+
+      /* 角丸 - B案: 大きめ */
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      /* スペーシング */
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+
+      /* フォント */
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+    }
+
+    /* グローバルスタイル */
+    body {
+      font-family: var(--font-family);
+      background: var(--color-bg-subtle);
+      color: var(--color-text-primary);
+    }
+
+    /* カードスタイル - B案 */
+    .card {
+      background: var(--color-bg-base);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: var(--spacing-lg);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ガラスモルフィズム効果 */
+    .glass {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* ボタンスタイル - B案 */
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: var(--color-white);
+      border-radius: var(--radius-md);
+      padding: 12px 24px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--color-bg-base);
+      color: var(--color-primary);
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius-md);
+      padding: 10px 22px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-bg-subtle);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* 入力フィールド */
+    .input-field {
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+      font-family: var(--font-family);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    /* ユーティリティクラス */
+    .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tooltip-trigger:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-sm);
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: var(--color-text-muted);
+      border-radius: var(--radius-sm);
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: var(--color-text-secondary);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .accordion-content.open {
+      max-height: 2000px;
+    }
+
     @media (max-width: 768px) {
-      .sidebar { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 50; transition: left 0.3s ease; width: 85%; max-width: 360px; }
-      .sidebar.open { left: 0; }
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 50;
+        transition: left 0.3s ease;
+        width: 85%;
+        max-width: 360px;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+    }
+
+    /* デザインプリセット切り替え用（将来の拡張用） */
+    [data-design="plan-a"] {
+      /* A案: クリーン&ミニマル */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+    }
+
+    [data-design="plan-c"] {
+      /* C案: テック企業風 */
+      --color-bg-base: #FFFFFF;
+      --color-bg-subtle: #F8FAFC;
+      --color-text-primary: #0A1929;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+      --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.15);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.18);
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --radius-lg: 6px;
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen" style="background: var(--color-bg-subtle);" data-design="plan-b">
   <div id="app"></div>
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -148,12 +338,12 @@
       }
 
       return html`
-        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-          <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-            <h1 class="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <div class="min-h-screen flex items-center justify-center p-4" style="background: var(--color-bg-subtle);">
+          <div class="card w-full max-w-md" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);">
+            <h1 class="text-3xl font-bold text-center mb-2" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
               漫画生成ツール
             </h1>
-            <p class="text-center text-gray-600 mb-8">
+            <p class="text-center mb-8" style="color: var(--color-text-secondary);">
               ${isSignUp ? '新規登録' : 'ログイン'}
             </p>
 
@@ -166,12 +356,12 @@
             <div class="space-y-4">
               ${isSignUp && html`
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">お名前 *</label>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">お名前 *</label>
                   <input
                     type="text"
                     value=${fullName}
                     onInput=${(e) => setFullName(e.target.value)}
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="input-field w-full"
                     placeholder="山田太郎"
                     required
                   />
@@ -179,43 +369,46 @@
               `}
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">メールアドレス *</label>
+                <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">メールアドレス *</label>
                 <input
                   type="email"
                   value=${email}
                   onInput=${(e) => setEmail(e.target.value)}
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="input-field w-full"
                   placeholder="example@email.com"
                   required
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">パスワード *</label>
+                <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">パスワード *</label>
                 <input
                   type="password"
                   value=${password}
                   onInput=${(e) => setPassword(e.target.value)}
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="input-field w-full"
                   placeholder="8文字以上"
                   required
                 />
                 ${isSignUp && html`
-                  <p class="text-xs text-gray-500 mt-1">8文字以上で入力してください</p>
+                  <p class="text-xs mt-1" style="color: var(--color-text-muted);">8文字以上で入力してください</p>
                 `}
               </div>
 
               <button
                 onClick=${isSignUp ? handleSignUp : handleSignIn}
                 disabled=${loading}
-                class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                class="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ${loading ? '処理中...' : (isSignUp ? '登録する' : 'ログイン')}
               </button>
 
               <button
                 onClick=${() => setIsSignUp(!isSignUp)}
-                class="w-full text-sm text-gray-600 hover:text-gray-800"
+                class="w-full text-sm transition-colors"
+                style="color: var(--color-text-secondary); padding: 8px;"
+                onMouseEnter=${(e) => e.target.style.color = 'var(--color-text-primary)'}
+                onMouseLeave=${(e) => e.target.style.color = 'var(--color-text-secondary)'}
               >
                 ${isSignUp ? 'すでにアカウントをお持ちの方はこちら' : 'アカウントをお持ちでない方はこちら'}
               </button>
@@ -240,11 +433,11 @@
       if (!props.isOpen) return null;
       var sizes = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', full: 'max-w-[95vw]' };
       return html`
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick=${props.onClose}>
-          <div class="bg-white rounded-xl w-full ${sizes[props.size] || sizes.md} max-h-[90vh] overflow-hidden flex flex-col" onClick=${function(e) { e.stopPropagation(); }}>
-            <div class="flex justify-between items-center p-4 border-b">
-              <h3 class="text-lg font-bold">${props.title}</h3>
-              <button onClick=${props.onClose} class="text-gray-500 hover:text-gray-700 text-2xl leading-none">×</button>
+        <div class="fixed inset-0 flex items-center justify-center z-50 p-4" style="background: rgba(26, 35, 50, 0.5); backdrop-filter: blur(4px);" onClick=${props.onClose}>
+          <div class="w-full ${sizes[props.size] || sizes.md} max-h-[90vh] overflow-hidden flex flex-col" style="background: var(--color-bg-base); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);" onClick=${function(e) { e.stopPropagation(); }}>
+            <div class="flex justify-between items-center p-4" style="border-bottom: 1px solid var(--color-border);">
+              <h3 class="text-lg font-bold" style="color: var(--color-text-primary);">${props.title}</h3>
+              <button onClick=${props.onClose} class="text-2xl leading-none transition-colors" style="color: var(--color-text-muted);" onMouseEnter=${(e) => e.target.style.color = 'var(--color-text-primary)'} onMouseLeave=${(e) => e.target.style.color = 'var(--color-text-muted)'}>×</button>
             </div>
             <div class="overflow-y-auto flex-1 p-4">${props.children}</div>
           </div>
@@ -1632,7 +1825,10 @@
               <div class="relative">
                 <button
                   onClick=${function() { setShowUserMenu(!showUserMenu); }}
-                  class="user-menu-button w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold hover:shadow-lg transition-shadow"
+                  class="user-menu-button w-9 h-9 rounded-full text-white flex items-center justify-center text-sm font-bold transition-shadow"
+                  style="background: var(--gradient-primary); box-shadow: var(--shadow-md);"
+                  onMouseEnter=${(e) => e.target.style.boxShadow = 'var(--shadow-lg)'}
+                  onMouseLeave=${(e) => e.target.style.boxShadow = 'var(--shadow-md)'}
                 >
                   ${(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                 </button>
@@ -1664,7 +1860,10 @@
               <div class="relative">
                 <button
                   onClick=${function() { setShowUserMenu(!showUserMenu); }}
-                  class="user-menu-button w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center text-base font-bold hover:shadow-lg transition-shadow"
+                  class="user-menu-button w-10 h-10 rounded-full text-white flex items-center justify-center text-base font-bold transition-shadow"
+                  style="background: var(--gradient-primary); box-shadow: var(--shadow-md);"
+                  onMouseEnter=${(e) => e.target.style.boxShadow = 'var(--shadow-lg)'}
+                  onMouseLeave=${(e) => e.target.style.boxShadow = 'var(--shadow-md)'}
                 >
                   ${(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                 </button>
@@ -2133,6 +2332,27 @@
       `;
     }
 
+    // デザイン切り替え機能
+    window.switchDesign = function(design) {
+      var validDesigns = ['plan-a', 'plan-b', 'plan-c'];
+      if (!validDesigns.includes(design)) {
+        console.error('Invalid design. Use "plan-a", "plan-b", or "plan-c"');
+        return;
+      }
+      document.body.setAttribute('data-design', design);
+      localStorage.setItem('manga_design_preset', design);
+      console.log('✅ Design switched to:', design);
+      console.log('   Plan A: クリーン&ミニマル');
+      console.log('   Plan B: モダン&プロフェッショナル (current)');
+      console.log('   Plan C: テック企業風');
+    };
+
+    // ページロード時にデザイン設定を復元
+    (function() {
+      var savedDesign = localStorage.getItem('manga_design_preset') || 'plan-b';
+      document.body.setAttribute('data-design', savedDesign);
+    })();
+
     // 認証ラッパー（メインApp）
     function App() {
       var s1 = useState(null); var user = s1[0], setUser = s1[1];
@@ -2178,7 +2398,14 @@
       return html`<${MangaApp} user=${user} onSignOut=${handleSignOut} />`;
     }
 
-    ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(App));
+    // アプリをレンダリング
+    var appElement = document.getElementById('app');
+    if (appElement) {
+      var root = ReactDOM.createRoot(appElement);
+      root.render(React.createElement(App));
+    } else {
+      console.error('App element not found');
+    }
   </script>
 </body>
 </html>
