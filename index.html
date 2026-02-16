@@ -854,11 +854,12 @@
     };
 
     var TUTORIAL = [
-      { title: 'ようこそ！', content: 'このツールでは、ストーリーを入力するだけで\nAIが自動で4コマ漫画を生成します。\n\nアカウント登録で履歴保存や\nカスタムスタイル作成が可能です。' },
-      { title: 'キャラクター設定', content: '左メニューから最大4人のキャラクターを\n選択できます。\n\n自分でキャラクター画像をアップロードし、\n詳細な特徴を設定することも可能です。' },
-      { title: 'スタイルのカスタマイズ', content: '既定の絵のテイストから選ぶか、\n「+カスタムスタイル追加」で\nオリジナルスタイルを作成できます。\n\nドラッグ操作で並び替えも可能です。' },
-      { title: '漫画の生成', content: 'ストーリーを入力して\n「漫画を生成」ボタンをクリック！\n\n生成枚数は1〜5枚まで選択可能です。' },
-      { title: '履歴とプロジェクト', content: '生成した漫画は自動で履歴に保存されます。\n\nプロジェクト機能で設定を保存し、\n後から呼び出すこともできます。' }
+      { title: 'ステップ1: Google AI Studioにアクセス', content: 'まず、Google AI StudioでAPIキーを取得します。\n\n1. https://aistudio.google.com/apikey にアクセス\n2. Googleアカウントでログイン\n   （Gmail等のアカウントが必要です）\n3. 利用規約に同意\n\n※初めての方でも5分程度で完了します' },
+      { title: 'ステップ2: APIキーを作成', content: '画面の指示に従ってAPIキーを作成します。\n\n1. 「Get API key」ボタンをクリック\n2. 「Create API key」を選択\n3. プロジェクトを選択（新規の場合は「Create new project」）\n4. APIキーが表示されます\n5. 「Copy」ボタンでコピー\n\n※このキーは一度しか表示されないので、必ずコピーしてください' },
+      { title: 'ステップ3: クレジットカード登録', content: '課金設定を行います（無料枠でも必須）。\n\n1. Google Cloud Console（https://console.cloud.google.com/）にアクセス\n2. 左上のプロジェクト名をクリックして、先ほど作成したプロジェクトを選択\n3. 左メニューの「お支払い」→「アカウントを管理」\n4. 「お支払い方法を追加」をクリック\n5. クレジットカード情報を入力して保存\n\n300ドルまで無料で使用できます（無料クレジット）\n使い切るまでは課金されません' },
+      { title: 'ステップ4: APIキーを設定', content: '取得したAPIキーをこのアプリに設定します。\n\n1. 左サイドバーの「API設定」にAPIキーを貼り付け\n2. 「保存」ボタンをクリック\n3. 「保存済み」と表示されることを確認\n\nAPIキーは暗号化されてブラウザに安全に保存されます\nサーバーには送信されません' },
+      { title: 'ステップ5: 費用について', content: '画像生成には費用がかかります。\n\n推定費用（画面に表示されます）:\n- 標準: 約$0.XX/枚\n- 高品質2K: 約$0.XX/枚\n- 超高品質4K: 約$0.XX/枚\n\n重要:\n・表示される金額はあくまで推定値です\n・正確な費用は必ずGoogle AI Studioで確認してください\n・https://aistudio.google.com/ の「Usage」タブで確認できます\n・300ドルの無料クレジットを使い切ると課金が開始されます' },
+      { title: 'ステップ6: 漫画を生成してみよう', content: 'さっそく漫画を作ってみましょう！\n\n1. 「ストーリー・記事内容」にテキストを入力\n2. 「絵のテイスト」を選択（左メニュー）\n3. 生成枚数を選択（1-5枚）\n4. 「漫画を生成」ボタンをクリック\n\n初めての方は1枚から試すのがおすすめです' }
     ];
 
     // 認証フォーム
@@ -1120,6 +1121,7 @@
       var s81 = useState([]); var charSheetSaved = s81[0], setCharSheetSaved = s81[1];
       var s82 = useState(''); var charSheetSaveMsg = s82[0], setCharSheetSaveMsg = s82[1];
       var s83 = useState([]); var characterSheets = s83[0], setCharacterSheets = s83[1];
+      var s84 = useState(false); var showApiEdit = s84[0], setShowApiEdit = s84[1];
 
       var fileRef = useRef(null);
       var editFileRef = useRef(null);
@@ -1438,10 +1440,27 @@
       }
 
       function saveApi() {
+        // APIキーのバリデーション
+        if (!apiKey || apiKey.trim().length === 0) {
+          alert('APIキーを入力してください');
+          return;
+        }
+
+        // Google AI StudioのAPIキー形式チェック
+        // 通常「AIza」で始まり、30文字以上の英数字、ハイフン、アンダースコア
+        var isValidFormat = /^AIza[A-Za-z0-9_-]{35,}$/.test(apiKey.trim());
+
+        if (!isValidFormat) {
+          alert('APIキーの形式が正しくありません。\n\nGoogle AI StudioのAPIキーは「AIza」で始まる39文字の文字列です。\n正しいAPIキーを入力してください。');
+          setApiSaved(false);
+          return;
+        }
+
         // セキュリティ強化：APIキーを暗号化して保存
-        var encrypted = encryptApiKey(apiKey);
+        var encrypted = encryptApiKey(apiKey.trim());
         localStorage.setItem('manga_api_key', encrypted);
         setApiSaved(true);
+        setShowApiEdit(false); // 編集モードを閉じる
       }
 
       // 画像圧縮関数
@@ -2858,19 +2877,36 @@
             </div>
 
             <div class="mb-4 glass-card animate-fadeIn">
-              <div class="flex items-center mb-3">
-                <span class="text-sm font-semibold" style="color: var(--color-text-primary);">API設定</span>
-                <${HelpIcon} text=${HELP.api} />
-              </div>
-              <div class="relative mb-3">
-                <input type=${showApi ? 'text' : 'password'} value=${apiKey} onInput=${function(e) { setApiKey(e.target.value); setApiSaved(false); }} placeholder="APIキーを入力" class="input-field w-full pr-16 text-sm" />
-                <button onClick=${function() { setShowApi(!showApi); }} class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color: var(--color-text-secondary);">${showApi ? '隠す' : '表示'}</button>
-              </div>
-              <button onClick=${saveApi} class="btn-primary w-full text-sm">保存</button>
-              <div class="mt-2 text-xs flex items-center gap-1" style="color: ${apiSaved ? 'var(--color-success)' : 'var(--color-warning)'};">
-                <span>${apiSaved ? '✓' : '⚠'}</span>
-                <span>${apiSaved ? '保存済み' : '未保存'}</span>
-              </div>
+              ${apiSaved && !showApiEdit ? html`
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold" style="color: var(--color-success);">API: 設定済み</span>
+                    <span style="color: var(--color-success);">✓</span>
+                  </div>
+                  <button onClick=${function() { setShowApiEdit(true); }} class="text-xs text-blue-600 hover:text-blue-700 underline">
+                    編集
+                  </button>
+                </div>
+              ` : html`
+                <div class="flex items-center mb-3">
+                  <span class="text-sm font-semibold" style="color: var(--color-text-primary);">API設定</span>
+                  <${HelpIcon} text=${HELP.api} />
+                </div>
+                <div class="relative mb-3">
+                  <input type=${showApi ? 'text' : 'password'} value=${apiKey} onInput=${function(e) { setApiKey(e.target.value); setApiSaved(false); }} placeholder="APIキーを入力" class="input-field w-full pr-16 text-sm" />
+                  <button onClick=${function() { setShowApi(!showApi); }} class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style="color: var(--color-text-secondary);">${showApi ? '隠す' : '表示'}</button>
+                </div>
+                <button onClick=${saveApi} class="btn-primary w-full text-sm">保存</button>
+                <div class="mt-2 text-xs flex items-center gap-1" style="color: ${apiSaved ? 'var(--color-success)' : 'var(--color-warning)'};">
+                  <span>${apiSaved ? '✓' : '⚠'}</span>
+                  <span>${apiSaved ? '保存済み' : '未保存'}</span>
+                </div>
+                ${apiSaved && showApiEdit && html`
+                  <button onClick=${function() { setShowApiEdit(false); }} class="text-xs text-gray-500 hover:text-gray-700 mt-2 w-full">
+                    編集を閉じる
+                  </button>
+                `}
+              `}
             </div>
 
             <div class="mb-4">
@@ -3057,6 +3093,22 @@
           </div>
 
           <div class="flex-1 p-4 md:p-6 overflow-y-auto">
+            ${!apiSaved && html`
+              <div style="background: #FEF3C7; border: 2px solid #F59E0B; padding: 16px; text-align: center; margin-bottom: 20px; border-radius: 8px;">
+                <div style="font-size: 18px; font-weight: bold; color: #92400E; margin-bottom: 8px;">
+                  APIキーが未設定です
+                </div>
+                <div style="color: #78350F; margin-bottom: 12px;">
+                  漫画を生成するには、Google AI StudioのAPIキーが必要です
+                </div>
+                <button onClick=${function() { window.open('https://aistudio.google.com/apikey', '_blank'); }} style="background: #F59E0B; color: white; padding: 10px 24px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; margin-right: 8px;">
+                  API設定を開く
+                </button>
+                <button onClick=${function() { setShowTut(true); }} style="background: none; border: none; color: #92400E; text-decoration: underline; cursor: pointer;">
+                  設定方法を見る（チュートリアル）
+                </button>
+              </div>
+            `}
             <div class="md:hidden flex items-center justify-between mb-4">
               <button onClick=${function() { setSidebar(true); }} class="text-2xl">☰</button>
               <h1 class="text-lg font-bold">漫画クリエイター</h1>

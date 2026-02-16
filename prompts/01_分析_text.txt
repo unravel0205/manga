@@ -125,17 +125,32 @@ When generating multiple images in sequence, maintain ABSOLUTE CONSISTENCY:
 - Each character must be stacked vertically in columns
 - Multiple columns read from right to left
 
-■ Text Quality Standards
-- Characters must be crystal clear, perfectly legible, and properly formed
-- Professional manga-style font rendering
-- Appropriate font size for speech bubbles (readable but not oversized)
+■ Text Quality Standards - 🚨 ABSOLUTE HIGHEST PRIORITY
+⚠️ CRITICAL: Text quality is THE MOST IMPORTANT aspect of this manga
+- Characters must be CRYSTAL CLEAR, PERFECTLY LEGIBLE, and PROPERLY FORMED
+- Professional manga-style font rendering at MAXIMUM quality
+- Font size MUST be LARGE ENOUGH for perfect readability (minimum 20-24pt equivalent in final output)
 - Natural Japanese spacing and line breaks
-- Sharp, clean character rendering (not blurry or distorted)
+- SHARP, CLEAN character rendering - ABSOLUTELY NO blurry or distorted characters
+- Each stroke of every character must be clearly visible and distinct
+- Maximum contrast between text and background for optimal readability
+- Apply professional anti-aliasing for smooth, crisp edges
 
-■ Font Specifications
-- Use clear, simple Japanese font for maximum readability
-- Avoid decorative or overly stylized fonts that reduce legibility
-- Font should render each character distinctly without blurring
+■ Font Specifications - MANDATORY REQUIREMENTS
+- Use BOLD, CLEAR Japanese manga font (ゴシック体 or similar professional manga font)
+- ABSOLUTELY NO decorative, stylized, or artistic fonts that reduce legibility
+- Font weight should be MEDIUM to BOLD for maximum clarity
+- Character size within bubbles: LARGE enough to be instantly readable
+- Each character must occupy sufficient space to render all strokes clearly
+- Ensure proper character spacing (字間) to prevent characters from touching
+- NO font compression, NO character deformation
+
+■ Text Rendering Priority
+🚨 If there is ANY conflict between artistic elements and text clarity:
+- ALWAYS prioritize text clarity and legibility
+- Text quality is MORE IMPORTANT than background details
+- Text quality is MORE IMPORTANT than artistic effects
+- Readable text is NON-NEGOTIABLE
 
 ■ Speech Bubble Integration
 - Text must be properly positioned within speech bubbles
@@ -371,11 +386,21 @@ When style-specific requirements conflict with general guidelines:
 ---
 【CRITICAL REQUIREMENTS - FINAL CHECKLIST】
 
-Before generating, verify:
+🚨 BEFORE GENERATING - VERIFY JAPANESE TEXT QUALITY FIRST:
+⚠️ Text quality is your PRIMARY responsibility - check these BEFORE anything else:
+✓ Font size is LARGE enough (minimum 20-24pt equivalent)
+✓ Font weight is BOLD enough for crisp rendering
+✓ Every single character is SHARP and CLEAR (zoom in to verify)
+✓ ZERO blurry characters, ZERO pixelated characters
+✓ Maximum contrast between text and speech bubble background
+✓ Professional anti-aliasing applied to all text
+✓ Each character stroke is clearly visible and distinct
+✓ NO artistic effects applied to text that reduce clarity
+
+Then verify other requirements:
 ✓ Reference image character design faithfully reproduced (if provided)
 ✓ All speech bubbles contain authentic Japanese text (hiragana, katakana, kanji)
 ✓ Text is vertical (top to bottom) and reads right to left
-✓ Characters are clear, legible, and properly formed
 ✓ Character design is consistent across all panels
 ✓ 1 panel without character (with story-specific content)
 ✓ Character-present panels total 70-90 characters
@@ -385,21 +410,39 @@ Before generating, verify:
 ✓ Panel borders are clearly defined
 ✓ Correct number of panels (2-4) in vertical composition with 2:3 aspect ratio
 
-【DO NOT】
+【DO NOT】 - CRITICAL VIOLATIONS
+🚨 TEXT QUALITY VIOLATIONS (ABSOLUTELY FORBIDDEN):
+× Use small, thin, or light-weight fonts for Japanese text
+× Use blurry, unclear, pixelated, or poorly rendered Japanese characters
+× Use decorative or artistic fonts that reduce text legibility
+× Apply any effects to text that reduce clarity (shadows, outlines that blur text, etc.)
+× Compress or deform characters to fit space - instead make bubble larger
+× Use low contrast between text and background
+× Render text at insufficient resolution
 × Use English text or romanization instead of Japanese
 × Write "[Japanese text]" or any placeholder text
+
+OTHER VIOLATIONS:
 × Change character's clothing or hairstyle between panels
 × Use excessive comedic exaggeration (sweat drops, deformed faces)
 × Write sound effects as text (like "キラキラ")
 × Create black and white manga
 × Use generic, non-story-specific content in character-absent panels
-× Use blurry, unclear, or poorly rendered Japanese characters
 × Deviate from reference image character design (if provided)
 × Create monotonous compositions with identical angles/distances/backgrounds
 × Repeat the same dialogue content across panels
 
 ---
-FINAL REMINDER BEFORE GENERATION:
+🚨🚨🚨 FINAL CRITICAL REMINDER BEFORE GENERATION 🚨🚨🚨
+
+⚠️ JAPANESE TEXT QUALITY IS YOUR #1 PRIORITY - NON-NEGOTIABLE:
+- Use MAXIMUM resolution rendering for ALL Japanese characters
+- Font size MUST be LARGE (minimum 20-24pt equivalent in final output)
+- Font weight MUST be BOLD for crisp, clear rendering
+- VERIFY every single character is perfectly sharp and readable
+- ZERO tolerance for blurry, pixelated, or unclear text
+- If text is not perfect, the entire manga fails - prioritize text above all else
+
 ⚠️ PANEL COUNT VERIFICATION: This manga has {{PANEL_COUNT}} panels. Ensure your output specifies this count. ⚠️
 
 Before generating final prompt, verify:
