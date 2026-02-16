@@ -1,0 +1,155 @@
+⚠️ CRITICAL: Create a professional character sheet with EXACTLY 5 variations in a single image
+
+---
+【CHARACTER SHEET SPECIFICATIONS - ABSOLUTE REQUIREMENTS】
+
+■ Layout Structure (MANDATORY)
+- Single image containing ALL 5 character variations
+- Follow the reference template layout EXACTLY
+- Top row: 2 portraits (Neutral on left, Smile on right)
+- Bottom row: 3 full-body views (Front on left, Side in middle, Back on right)
+- Each section clearly labeled with English text
+- White or light gray background
+- Professional character design sheet format
+
+■ Character Description
+{{CHARACTER_DESCRIPTION}}
+
+■ Art Style
+{{STYLE_PROMPT}}
+
+---
+【CRITICAL LAYOUT REQUIREMENTS】
+
+This MUST be a character sheet in the following format:
+
+```
+┌─────────────────────────────────────────────┐
+│  Character Sheet                            │
+├──────────────────┬──────────────────────────┤
+│  Neutral         │  Smile                   │
+│  [Portrait]      │  [Portrait]              │
+│  (head & shoulders) │ (head & shoulders)   │
+├──────────┬───────────┬──────────────────────┤
+│  Front   │  Side     │  Back                │
+│  [Full]  │  [Full]   │  [Full]              │
+│  (body)  │  (body)   │  (body)              │
+└──────────┴───────────┴──────────────────────┘
+```
+
+## Section 1: Neutral (Top Left)
+- Portrait view (head and shoulders)
+- Neutral, calm expression
+- Looking forward
+- Clear view of face, hair, and upper clothing
+
+## Section 2: Smile (Top Right)
+- Portrait view (head and shoulders)
+- Smiling, happy expression
+- Looking forward
+- Same character design as Neutral
+- ONLY the expression changes
+
+## Section 3: Front (Bottom Left)
+- Full-body view from front
+- Standing pose
+- Neutral expression
+- Show complete outfit and proportions
+- Arms at sides or slightly away from body
+
+## Section 4: Side (Bottom Center)
+- Full-body view from side (profile)
+- Standing pose
+- Shows silhouette and proportions from side angle
+- Clear view of hairstyle from side
+
+## Section 5: Back (Bottom Right)
+- Full-body view from back
+- Standing pose
+- Show back of head, hair, and clothing
+- Clear view of outfit from behind
+
+---
+【CHARACTER CONSISTENCY - ABSOLUTE PRIORITY】
+
+⚠️ CRITICAL: The character MUST be IDENTICAL across all 5 variations:
+- Same hairstyle, hair color, and hair length
+- Same eye color and facial features
+- Same clothing and outfit design
+- Same body proportions and build
+- Same accessories (if any)
+- ONLY differences: viewing angle and expression (Neutral vs Smile)
+
+---
+【VISUAL QUALITY REQUIREMENTS】
+
+■ Image Quality
+- High resolution (4K quality)
+- Aspect ratio: 3:2 or 4:3 (horizontal layout)
+- Clean, sharp lines
+- Professional manga/anime character sheet quality
+- No blurriness or artifacts
+
+■ Color & Style
+- {{STYLE_PROMPT}}
+- Vibrant, well-defined colors
+- Consistent lighting across all 5 sections
+- Professional character sheet aesthetic
+
+■ Labels
+- Clear English labels for each section: "Neutral", "Smile", "Front", "Side", "Back"
+- Optional: "Character Sheet" title at top
+- Labels should be simple, readable text (NOT speech bubbles)
+
+---
+【REFERENCE IMAGE USAGE】
+
+If a reference template image is provided:
+- Follow its exact layout structure
+- Maintain the same section divisions
+- Keep the same labeling style
+- Replicate the professional character sheet format
+
+If a character base image is provided:
+- Extract character design elements (hairstyle, clothing, features)
+- Maintain design consistency across all 5 variations
+- Apply the specified art style while preserving character identity
+
+---
+【CRITICAL CHECKLIST - VERIFY BEFORE GENERATING】
+
+✓ Single image containing ALL 5 character variations
+✓ Correct layout: 2 portraits (top), 3 full-body (bottom)
+✓ Neutral portrait (top left) with calm expression
+✓ Smile portrait (top right) with happy expression
+✓ Front full-body view (bottom left)
+✓ Side full-body view (bottom center)
+✓ Back full-body view (bottom right)
+✓ Character design is IDENTICAL across all 5 sections
+✓ Clear section labels in English
+✓ Professional character sheet appearance
+✓ High resolution and image quality
+✓ Art style applied consistently
+
+---
+【DO NOT】 - CRITICAL VIOLATIONS
+
+× Create 5 separate images - MUST be a single combined image
+× Change character design between sections (hair, clothes, etc.)
+× Use different art styles across sections
+× Create manga panels or comic strips - this is a CHARACTER SHEET
+× Add speech bubbles or dialogue
+× Include backgrounds or scenes - keep it simple and professional
+× Make the character different ages or sizes across sections
+× Add unnecessary decorative elements that obscure the character
+
+---
+🚨🚨🚨 FINAL CRITICAL REMINDER 🚨🚨🚨
+
+This is a PROFESSIONAL CHARACTER SHEET for reference purposes.
+- ONE single image
+- FIVE character variations (2 portraits + 3 full-body)
+- PERFECT character consistency
+- CLEAN, SIMPLE, PROFESSIONAL format
+
+The output will be used as a reference for future manga generation, so clarity and consistency are CRITICAL.

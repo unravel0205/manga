@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>漫画クリエイター</title>
+
+  <!-- セキュリティヘッダー -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -706,6 +713,101 @@
   <script type="module">
     import { html, render, useState, useEffect, useRef } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
+    // セキュリティ関数：入力値のサニタイゼーション
+    function sanitizeInput(input, maxLength) {
+      if (typeof input !== 'string') return '';
+      return input
+        .replace(/[<>]/g, '') // XSS対策：HTMLタグ削除
+        .trim()
+        .slice(0, maxLength || 10000); // 長さ制限
+    }
+
+    // セキュリティ関数：APIキーの暗号化・復号化
+    function encryptApiKey(apiKey) {
+      if (!apiKey) return '';
+      try {
+        // Base64エンコード + 簡易的な文字列変換
+        var encoded = btoa(apiKey);
+        var scrambled = encoded.split('').reverse().join('');
+        return scrambled;
+      } catch (e) {
+        console.error('暗号化エラー:', e);
+        return apiKey; // エラー時は元の値を返す
+      }
+    }
+
+    function decryptApiKey(encrypted) {
+      if (!encrypted) return '';
+      try {
+        // 復号化
+        var unscrambled = encrypted.split('').reverse().join('');
+        var decoded = atob(unscrambled);
+        return decoded;
+      } catch (e) {
+        console.error('復号化エラー:', e);
+        return ''; // エラー時は空文字を返す
+      }
+    }
+
+    // セキュリティ関数：レート制限
+    var lastGenerateTime = 0;
+    var MIN_GENERATE_INTERVAL = 5000; // 5秒
+
+    function checkRateLimit() {
+      var now = Date.now();
+      var timeSinceLastGenerate = now - lastGenerateTime;
+
+      if (timeSinceLastGenerate < MIN_GENERATE_INTERVAL) {
+        var waitSeconds = Math.ceil((MIN_GENERATE_INTERVAL - timeSinceLastGenerate) / 1000);
+        throw new Error('生成リクエストが多すぎます。' + waitSeconds + '秒後に再試行してください。');
+      }
+
+      lastGenerateTime = now;
+    }
+
+    // セキュリティ関数：画像ファイル検証
+    function validateImageFile(file) {
+      if (!file) {
+        throw new Error('ファイルが選択されていません。');
+      }
+
+      // 1. ファイルタイプチェック（MIMEタイプ）
+      var allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('PNG、JPEG、またはWebP形式の画像のみアップロード可能です。\n選択されたファイル形式: ' + (file.type || '不明'));
+      }
+
+      // 2. SVG禁止（XSS対策）
+      if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
+        throw new Error('セキュリティ上の理由により、SVG形式は使用できません。');
+      }
+
+      // 3. ファイルサイズチェック（5MB制限）
+      var MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_SIZE) {
+        var sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        throw new Error('ファイルサイズが大きすぎます（' + sizeMB + 'MB）。\n5MB以下の画像を選択してください。');
+      }
+
+      // 4. ファイル名チェック（拡張子偽装対策）
+      var fileName = file.name.toLowerCase();
+      var validExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+      var hasValidExtension = validExtensions.some(function(ext) {
+        return fileName.endsWith(ext);
+      });
+
+      if (!hasValidExtension) {
+        throw new Error('無効なファイル拡張子です。\nPNG、JPEG、またはWebP形式の画像を選択してください。');
+      }
+
+      // 5. 最小サイズチェック（破損ファイル対策）
+      if (file.size < 100) {
+        throw new Error('ファイルが破損している可能性があります。\n別の画像を選択してください。');
+      }
+
+      return true;
+    }
+
     // Supabase設定
     var SUPABASE_URL = 'https://twhhrgcksstikdoyroto.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3aGhyZ2Nrc3N0aWtkb3lyb3RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMzk3MzIsImV4cCI6MjA4NjYxNTczMn0.grPvawJNNXoikE7tLVf-Fq3rglXJjwdfpYGjdmYlL7s';
@@ -916,9 +1018,10 @@
     function Modal(props) {
       if (!props.isOpen) return null;
       var sizes = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', full: 'max-w-[95vw]' };
+      var heights = { sm: 'max-h-[90vh]', md: 'max-h-[90vh]', lg: 'max-h-[90vh]', full: 'max-h-[95vh]' };
       return html`
         <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: var(--z-index-modal-backdrop); background: rgba(26, 35, 50, 0.5); backdrop-filter: blur(4px);" onClick=${props.onClose}>
-          <div class="w-full ${sizes[props.size] || sizes.md} max-h-[90vh] overflow-hidden flex flex-col" style="z-index: var(--z-index-modal); background: var(--color-bg-base); border-radius: var(--radius-lg); box-shadow: var(--shadow-2xl);" onClick=${function(e) { e.stopPropagation(); }}>
+          <div class="w-full ${sizes[props.size] || sizes.md} ${heights[props.size] || heights.md} overflow-hidden flex flex-col" style="z-index: var(--z-index-modal); background: var(--color-bg-base); border-radius: var(--radius-lg); box-shadow: var(--shadow-2xl);" onClick=${function(e) { e.stopPropagation(); }}>
             <div class="flex justify-between items-center" style="padding: var(--spacing-4); border-bottom: 1px solid var(--color-border);">
               <h3 class="font-bold" style="font-size: var(--font-size-lg); color: var(--color-text-primary);">${props.title}</h3>
               <button onClick=${props.onClose} class="leading-none transition-colors" style="font-size: var(--font-size-2xl); color: var(--color-text-muted); transition: all var(--transition-base);" onMouseEnter=${(e) => e.target.style.color = 'var(--color-text-primary)'} onMouseLeave=${(e) => e.target.style.color = 'var(--color-text-muted)'}>×</button>
@@ -1002,38 +1105,71 @@
       var s68 = useState(null); var editingCharId = s68[0], setEditingCharId = s68[1];
       var s69 = useState(''); var editCharName = s69[0], setEditCharName = s69[1];
       var s70 = useState(null); var editCharImg = s70[0], setEditCharImg = s70[1];
+      var s71 = useState(0); var elapsedTime = s71[0], setElapsedTime = s71[1];
+      var s72 = useState(null); var genStartTime = s72[0], setGenStartTime = s72[1];
+
+      // キャラクターシート生成関連
+      var s73 = useState('manga'); var activeTab = s73[0], setActiveTab = s73[1];
+      var s74 = useState(0); var curCharSheet = s74[0], setCurCharSheet = s74[1];
+      var s75 = useState(''); var charSheetName = s75[0], setCharSheetName = s75[1];
+      var s76 = useState(''); var charSheetDesc = s76[0], setCharSheetDesc = s76[1];
+      var s77 = useState(null); var charSheetBaseImg = s77[0], setCharSheetBaseImg = s77[1];
+      var s78 = useState(1); var charSheetCount = s78[0], setCharSheetCount = s78[1];
+      var s79 = useState(0); var charSheetGenStep = s79[0], setCharSheetGenStep = s79[1];
+      var s80 = useState([]); var generatedCharSheets = s80[0], setGeneratedCharSheets = s80[1];
+      var s81 = useState([]); var charSheetSaved = s81[0], setCharSheetSaved = s81[1];
+      var s82 = useState(''); var charSheetSaveMsg = s82[0], setCharSheetSaveMsg = s82[1];
+      var s83 = useState([]); var characterSheets = s83[0], setCharacterSheets = s83[1];
 
       var fileRef = useRef(null);
       var editFileRef = useRef(null);
       var charRefs = useRef([null, null, null, null]);
       var styleRefInput = useRef(null);
+      var charSheetFileRef = useRef(null);
       var cancelRef = useRef(false);
 
       // 初期化
       useEffect(function() {
         try {
-          var k = localStorage.getItem('manga_api_key');
-          if (k) { setApiKey(k); setApiSaved(true); }
+          // セキュリティ強化：暗号化されたAPIキーを復号化
+          var encryptedKey = localStorage.getItem('manga_api_key');
+          if (encryptedKey) {
+            var decryptedKey = decryptApiKey(encryptedKey);
+            setApiKey(decryptedKey);
+            setApiSaved(true);
+          }
           var c = localStorage.getItem('manga_chars');
           if (c) setChars(JSON.parse(c));
-          var h = localStorage.getItem('manga_history');
-          if (h) {
-            try {
-              var histData = JSON.parse(h);
-              // 履歴が10件を超えている場合は削減
-              if (histData.length > 10) {
-                histData = histData.slice(0, 10);
-                localStorage.setItem('manga_history', JSON.stringify(histData));
-                console.log('履歴を10件に削減しました');
+          // Supabaseから履歴を読み込み
+          supabase
+            .from('mangas')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+            .then(function(result) {
+              if (result.error) {
+                console.error('履歴読み込みエラー:', result.error);
+                setHistory([]);
+              } else {
+                var histArr = result.data.map(function(item) {
+                  return {
+                    id: item.id,
+                    img: item.image_url,
+                    settings: {
+                      style: item.style_id,
+                      styleName: item.style_name,
+                      speech: item.settings?.speech,
+                      model: item.settings?.model,
+                      modelName: item.settings?.modelName,
+                      story: (item.story || '').substring(0, 80) + '...'
+                    },
+                    ts: item.created_at
+                  };
+                });
+                setHistory(histArr);
               }
-              setHistory(histData);
-            } catch(e) {
-              console.error('履歴読み込みエラー:', e);
-              // 破損している場合は空にする
-              localStorage.setItem('manga_history', '[]');
-              setHistory([]);
-            }
-          }
+            });
           var fh = localStorage.getItem('manga_fav_hist');
           if (fh) setFavHist(JSON.parse(fh));
           var p = localStorage.getItem('manga_projects');
@@ -1080,6 +1216,13 @@
           if (order) setStyleOrder(JSON.parse(order));
         } catch(e) { console.error(e); }
       }, []);
+
+      // キャラクターシート読み込み
+      useEffect(function() {
+        if (user) {
+          loadCharacterSheets();
+        }
+      }, [user]);
 
       // ドロップダウンメニューの外側クリックで閉じる
       useEffect(function() {
@@ -1156,23 +1299,13 @@
         });
       }
 
-      // プロンプトテンプレート読み込み（簡易版）
+      // プロンプトテンプレート読み込み（簡易モード）
       useEffect(function() {
         function loadPrompts() {
-          // モードに応じてファイルを選択
-          var mode = localStorage.getItem('manga_gen_mode') || 'simple';
-          var knownFiles;
-
-          if (mode === 'simple') {
-            knownFiles = [
-              { file: '01_簡易_image.txt', name: '簡易', type: 'image', order: 1 }
-            ];
-          } else {
-            knownFiles = [
-              { file: '01_分析_text.txt', name: '分析', type: 'text', order: 1 },
-              { file: '02_画像生成_image.txt', name: '画像生成', type: 'image', order: 2 }
-            ];
-          }
+          // 簡易モードを使用（UI上では「生成」と表示）
+          var knownFiles = [
+            { file: '01_簡易_image.txt', name: '生成', type: 'image', order: 1 }
+          ];
 
           var promises = knownFiles.map(function(fileInfo) {
             return fetch('./prompts/' + fileInfo.file)
@@ -1202,8 +1335,7 @@
               if (foundSteps.length === 0) {
                 console.error('プロンプトファイルが見つかりません。デフォルトを使用します。');
                 foundSteps = [
-                  { file: '01_分析_text.txt', name: '分析', type: 'text', template: getDefaultPromptStep1(), order: 1 },
-                  { file: '02_画像生成_image.txt', name: '画像生成', type: 'image', template: getDefaultPromptStep2(), order: 2 }
+                  { file: '01_簡易_image.txt', name: '生成', type: 'image', template: getDefaultPrompt(), order: 1 }
                 ];
               }
 
@@ -1251,6 +1383,49 @@
         };
       }, [showImg, modalImgIdx, genImages.length]);
 
+      // 経過時間の更新
+      useEffect(function() {
+        if (!isGen) {
+          setElapsedTime(0);
+          return;
+        }
+
+        var timer = setInterval(function() {
+          if (genStartTime) {
+            var elapsed = Math.floor((Date.now() - genStartTime) / 1000);
+            setElapsedTime(elapsed);
+          }
+        }, 1000);
+
+        return function() {
+          clearInterval(timer);
+        };
+      }, [isGen, genStartTime]);
+
+      // 履歴詳細モーダルでのキーボード操作
+      useEffect(function() {
+        if (!showHistDet || !histDet) return;
+
+        function handleKeyDown(e) {
+          var currentIndex = history.findIndex(function(h) { return h.id === histDet.id; });
+
+          if (e.key === 'ArrowLeft' && currentIndex < history.length - 1) {
+            // 前へ
+            setHistDet(history[currentIndex + 1]);
+          } else if (e.key === 'ArrowRight' && currentIndex > 0) {
+            // 次へ
+            setHistDet(history[currentIndex - 1]);
+          } else if (e.key === 'Escape') {
+            setShowHistDet(false);
+          }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        return function() {
+          window.removeEventListener('keydown', handleKeyDown);
+        };
+      }, [showHistDet, histDet, history]);
+
       function restoreDraft() {
         if (draft) {
           setStory(draft.story || '');
@@ -1263,7 +1438,9 @@
       }
 
       function saveApi() {
-        localStorage.setItem('manga_api_key', apiKey);
+        // セキュリティ強化：APIキーを暗号化して保存
+        var encrypted = encryptApiKey(apiKey);
+        localStorage.setItem('manga_api_key', encrypted);
         setApiSaved(true);
       }
 
@@ -1300,10 +1477,14 @@
         if (!newCharName || !newCharImg) return;
         // 画像を圧縮してから保存（最大幅400px、品質0.6）
         compressImage(newCharImg, 400, 0.6).then(function(compressedImg) {
-          var nc = { id: 'c_' + Date.now(), name: newCharName, img: compressedImg };
+          var nc = { id: 'c_' + Date.now(), name: newCharName, img: compressedImg, source: 'local' };
           var ncs = chars.concat([nc]);
           setChars(ncs);
-          localStorage.setItem('manga_chars', JSON.stringify(ncs));
+
+          // localStorageにはローカルキャラクターのみ保存
+          var localChars = ncs.filter(function(c) { return c.source !== 'supabase'; });
+          localStorage.setItem('manga_chars', JSON.stringify(localChars));
+
           setShowAddChar(false);
           setNewCharName('');
           setNewCharImg(null);
@@ -1466,11 +1647,37 @@
         setDraggedStyle(null);
       }
 
-      function delChar(id) {
+      async function delChar(id) {
         if (!confirm('削除しますか？')) return;
-        var ncs = chars.filter(function(c) { return c.id !== id; });
-        setChars(ncs);
-        localStorage.setItem('manga_chars', JSON.stringify(ncs));
+
+        var char = chars.find(function(c) { return c.id === id; });
+        if (!char) return;
+
+        // Supabaseのキャラクターの場合
+        if (char.source === 'supabase') {
+          try {
+            var realId = id.replace('supabase_', '');
+            await supabase
+              .from('character_sheets')
+              .delete()
+              .eq('id', realId)
+              .eq('user_id', user.id);
+
+            // 再読み込み
+            loadCharacterSheets();
+          } catch (err) {
+            console.error('削除エラー:', err);
+            alert('削除に失敗しました');
+          }
+        } else {
+          // ローカルキャラクターの場合
+          var ncs = chars.filter(function(c) { return c.id !== id; });
+          setChars(ncs);
+
+          var localChars = ncs.filter(function(c) { return c.source !== 'supabase'; });
+          localStorage.setItem('manga_chars', JSON.stringify(localChars));
+        }
+
         setSelChars(selChars.map(function(c) { return c && c.id === id ? null : c; }));
       }
 
@@ -1493,12 +1700,15 @@
 
         var ncs = chars.map(function(c) {
           if (c.id === editingCharId) {
-            return { id: c.id, name: editCharName, img: editCharImg };
+            return { id: c.id, name: editCharName, img: editCharImg, source: c.source };
           }
           return c;
         });
         setChars(ncs);
-        localStorage.setItem('manga_chars', JSON.stringify(ncs));
+
+        // localStorageにはローカルキャラクターのみ保存
+        var localChars = ncs.filter(function(c) { return c.source !== 'supabase'; });
+        localStorage.setItem('manga_chars', JSON.stringify(localChars));
 
         // 選択中のキャラクターも更新
         setSelChars(selChars.map(function(c) {
@@ -1517,6 +1727,16 @@
       function handleFile(e, idx) {
         var f = e.target.files[0];
         if (!f) return;
+
+        // セキュリティ：画像ファイル検証
+        try {
+          validateImageFile(f);
+        } catch (err) {
+          alert(err.message);
+          e.target.value = '';
+          return;
+        }
+
         var r = new FileReader();
         r.onload = function(ev) {
           // 一時キャラクターも圧縮してメモリ使用量を削減
@@ -1536,7 +1756,9 @@
 
       function updateCharDetail(idx, field, value) {
         var newDetails = charDetails.slice();
-        newDetails[idx] = Object.assign({}, newDetails[idx], { [field]: value });
+        // セキュリティ：入力値をサニタイズ
+        var sanitizedValue = sanitizeInput(value, field === 'name' ? 50 : 200);
+        newDetails[idx] = Object.assign({}, newDetails[idx], { [field]: sanitizedValue });
         setCharDetails(newDetails);
         localStorage.setItem('manga_char_details', JSON.stringify(newDetails));
       }
@@ -1653,6 +1875,11 @@
 
       function getDefaultPromptStep2() {
         return '以下の指示に従って4コマ漫画を生成してください。\n\n{{GENERATED_PROMPT}}\n\n【画像全体の条件】\n・縦長1枚画像、アスペクト比 2:3\n・4K高解像度、カラー漫画';
+      }
+
+      // 簡易モード用デフォルトプロンプト
+      function getDefaultPrompt() {
+        return '以下のストーリーを元に、縦型4コマ漫画を1枚の画像として生成してください。\n\n【ストーリー】\n{{STORY}}\n\n【画像仕様】\n・アスペクト比: 2:3（縦長）\n・4コマ漫画形式\n・カラー\n・高解像度（4K）\n・日本語の吹き出しテキスト';
       }
 
       // 変数置換
@@ -1831,7 +2058,7 @@
       }
 
       // 画像生成
-      function executeImageGeneration(promptText) {
+      async function executeImageGeneration(promptText) {
         var m = MODELS.find(function(x) { return x.id === model; });
         var parts = [];
 
@@ -1841,22 +2068,37 @@
             parts.push({ inlineData: { mimeType: 'image/png', data: b } });
           }
         });
+
         if (style === 99 && styleRef && styleRef.img) {
           var b = styleRef.img.split(',')[1];
           parts.push({ inlineData: { mimeType: 'image/png', data: b } });
         }
 
+        // モデルIDに応じた解像度と日本語テキスト品質の指定をプロンプトに追加
+        var resolutionText;
+        if (model === '4k') {
+          resolutionText = '\n\n🚨 ABSOLUTE CRITICAL REQUIREMENTS - HIGHEST PRIORITY:\n\n【IMAGE RESOLUTION】\n- Output resolution: 2048×3072 pixels (4K ULTRA HIGH quality)\n- Aspect ratio: 2:3 (vertical)\n- NO compression, NO quality degradation\n- Maximum detail preservation\n\n【日本語テキスト品質 - 最優先事項】\n⚠️ CRITICAL: Japanese text rendering is THE MOST IMPORTANT requirement:\n- Use HIGHEST quality Japanese font rendering\n- Each character MUST be rendered at MAXIMUM resolution\n- Character strokes MUST be crisp, sharp, and perfectly clear\n- NO blurry characters, NO pixelation, NO artifacts\n- Font size MUST be large enough for perfect legibility (minimum 24pt equivalent)\n- Use professional manga font style with clear, bold strokes\n- Ensure maximum contrast between text and background\n- Apply anti-aliasing for smooth character edges\n- VERIFY every single character is perfectly readable before finalizing\n- Text quality is MORE IMPORTANT than any other visual element\n\n⚠️ If you must choose between artistic style and text clarity, ALWAYS prioritize text clarity.';
+        } else if (model === '2k') {
+          resolutionText = '\n\n🚨 CRITICAL REQUIREMENTS:\n\n【IMAGE RESOLUTION】\n- Output resolution: 1440×2160 pixels (2K HIGH quality)\n- Aspect ratio: 2:3 (vertical)\n\n【日本語テキスト品質】\n⚠️ Japanese text rendering is CRITICAL:\n- Use high quality Japanese font rendering\n- Each character must be sharp and clear\n- NO blurry characters, NO pixelation\n- Font size must be large enough for easy reading\n- Clear, bold strokes for maximum legibility\n- High contrast between text and background';
+        } else {
+          resolutionText = '\n\n【IMAGE RESOLUTION】\n- Output resolution: 1024×1536 pixels (standard quality)\n- Aspect ratio: 2:3 (vertical)\n\n【日本語テキスト品質】\n- Clear Japanese font rendering\n- Readable characters with good contrast';
+        }
+
+        var enhancedPromptText = promptText + resolutionText;
+
         var body = {
-          system_instruction: { parts: [{ text: promptText }] },
+          system_instruction: { parts: [{ text: enhancedPromptText }] },
           contents: [{ parts: parts }],
           generationConfig: {
             responseModalities: ['IMAGE'],
-            temperature: 0.4,      // 一貫性重視：低めに設定（0.3-0.5推奨）
-            topP: 0.85,           // より予測可能な出力
-            topK: 40,             // 候補を絞る
+            temperature: 0.3,      // テキスト品質重視：さらに低く設定
+            topP: 0.8,            // より一貫性のある出力
+            topK: 30,             // 候補をさらに絞る
             candidateCount: 1     // 1つの結果のみ生成
           }
         };
+
+        console.log('画像生成リクエスト - モデル:', m.model, '品質:', model === '4k' ? '4K (2048×3072)' : model === '2k' ? '2K (1440×2160)' : '標準 (1024×1536)');
 
         return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m.model + ':generateContent?key=' + apiKey, {
           method: 'POST',
@@ -1880,12 +2122,21 @@
 
       // メイン生成関数（複数ステップ対応）
       function generate() {
+        // セキュリティ：レート制限チェック
+        try {
+          checkRateLimit();
+        } catch (err) {
+          setError(err.message);
+          return;
+        }
+
         if (!apiKey) { setError('APIキーを設定してください'); return; }
         if (!selChars[0]) { setError('説明者を選択してください'); return; }
         if (!story || story.length < 20) { setError('20文字以上入力してください'); return; }
         if (promptSteps.length === 0) { setError('プロンプトが読み込まれていません'); return; }
 
         setIsGen(true);
+        setGenStartTime(Date.now());
         setError('');
         setGenImages([]);
         setCurImg(0);
@@ -1924,58 +2175,120 @@
                   setGenImages(completedImages);
                   setCurImg(completedImages.length - 1);
 
-                  // 画像を圧縮して履歴に保存（最大幅400px、品質0.6で中程度圧縮）
-                  compressImage(output, 400, 0.6).then(function(compressedImg) {
-                    var st = STYLES.find(function(s) { return s.id === style; });
-                    var hi = { id: 'g_' + Date.now() + '_' + imgIndex, img: compressedImg, settings: { style: style, styleName: st ? st.name : '', speech: speech, model: model, modelName: m.name, story: story.substring(0, 80) + '...' }, ts: new Date().toISOString() };
-
+                  // 高品質画像をSupabase Storageにアップロード
+                  (async function() {
                     try {
-                      var savedHist = localStorage.getItem('manga_history');
-                      var histArr = savedHist ? JSON.parse(savedHist) : [];
-                      histArr.unshift(hi);
-                      if (histArr.length > 10) histArr = histArr.slice(0, 10);
-                      localStorage.setItem('manga_history', JSON.stringify(histArr));
-                      setHistory(histArr);
-                    } catch(e) {
-                      // QuotaExceededError対策: 古い履歴を削除して再試行
-                      if (e.name === 'QuotaExceededError') {
-                        console.warn('容量超過: 履歴を5件に削減して再試行');
-                        try {
-                          var reducedHist = [hi].concat(histArr.slice(0, 4));
-                          localStorage.setItem('manga_history', JSON.stringify(reducedHist));
-                          setHistory(reducedHist);
-                        } catch(e2) {
-                          // それでも失敗したら履歴を完全クリア
-                          console.error('履歴保存失敗: 履歴をクリアします');
-                          localStorage.setItem('manga_history', JSON.stringify([hi]));
-                          setHistory([hi]);
-                          alert('履歴の容量が限界に達したため、古い履歴を削除しました。');
-                        }
-                      } else {
-                        console.error('履歴保存エラー:', e);
+                      var st = STYLES.find(function(s) { return s.id === style; });
+
+                      // Base64をBlobに変換
+                      var base64Data = output.split(',')[1];
+                      var byteCharacters = atob(base64Data);
+                      var byteNumbers = new Array(byteCharacters.length);
+                      for (var i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
                       }
-                    }
+                      var byteArray = new Uint8Array(byteNumbers);
+                      var blob = new Blob([byteArray], { type: 'image/png' });
 
-                    // 使用量記録
-                    try {
-                      var now = new Date();
-                      var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                      var savedUsage = localStorage.getItem('manga_usage');
-                      var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
-                      if (!usageData.monthly) usageData.monthly = [];
-                      var md = usageData.monthly.find(function(x) { return x.month === mk; });
-                      if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
-                      md.items.push({ date: now.toISOString(), model: model, price: m.price });
-                      usageData.total.count = (usageData.total.count || 0) + 1;
-                      usageData.total.cost = (usageData.total.cost || 0) + m.price;
-                      localStorage.setItem('manga_usage', JSON.stringify(usageData));
-                      setUsage(usageData);
+                      // ファイル名生成（ユーザーID/タイムスタンプ.png）
+                      var fileName = props.user.id + '/' + Date.now() + '_' + imgIndex + '.png';
+
+                      // Supabase Storageにアップロード
+                      var uploadResult = await supabase.storage
+                        .from('manga-images')
+                        .upload(fileName, blob, {
+                          contentType: 'image/png',
+                          cacheControl: '3600',
+                          upsert: false
+                        });
+
+                      if (uploadResult.error) {
+                        console.error('画像アップロードエラー:', uploadResult.error);
+                        alert('画像のアップロードに失敗しました: ' + uploadResult.error.message);
+                        return;
+                      }
+
+                      // 公開URLを取得
+                      var publicUrlResult = supabase.storage
+                        .from('manga-images')
+                        .getPublicUrl(fileName);
+
+                      var publicUrl = publicUrlResult.data.publicUrl;
+
+                      // データベースに保存（URLのみ）
+                      var result = await supabase
+                        .from('mangas')
+                        .insert([{
+                          user_id: props.user.id,
+                          image_url: publicUrl,
+                          story: story,
+                          style_id: style,
+                          style_name: st ? st.name : '',
+                          settings: {
+                            speech: speech,
+                            model: model,
+                            modelName: m.name
+                          }
+                        }])
+                        .select();
+
+                      if (result.error) {
+                        console.error('履歴保存エラー:', result.error);
+                        alert('履歴の保存に失敗しました: ' + result.error.message);
+                      } else {
+                        // 履歴を再読み込み
+                        var histResult = await supabase
+                          .from('mangas')
+                          .select('*')
+                          .eq('user_id', props.user.id)
+                          .order('created_at', { ascending: false })
+                          .limit(10);
+
+                        if (!histResult.error) {
+                          var histArr = histResult.data.map(function(item) {
+                            return {
+                              id: item.id,
+                              img: item.image_url,
+                              settings: {
+                                style: item.style_id,
+                                styleName: item.style_name,
+                                speech: item.settings?.speech,
+                                model: item.settings?.model,
+                                modelName: item.settings?.modelName,
+                                story: (item.story || '').substring(0, 80) + '...'
+                              },
+                              ts: item.created_at
+                            };
+                          });
+                          setHistory(histArr);
+
+                          // 古い画像を自動削除（最新10件 + お気に入り以外）
+                          cleanupOldImages();
+                        }
+                      }
                     } catch(e) {
-                      console.error('使用量記録エラー:', e);
+                      console.error('保存エラー:', e);
+                      alert('画像の保存に失敗しました');
                     }
-                  }).catch(function(e) {
-                    console.error('画像圧縮エラー:', e);
-                  });
+                  })();
+
+                  // 使用量記録
+                  try {
+                    var now = new Date();
+                    var mk = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                    var savedUsage = localStorage.getItem('manga_usage');
+                    var usageData = savedUsage ? JSON.parse(savedUsage) : { monthly: [], total: { count: 0, cost: 0 } };
+                    if (!usageData.monthly) usageData.monthly = [];
+                    var md = usageData.monthly.find(function(x) { return x.month === mk; });
+                    if (!md) { md = { month: mk, items: [] }; usageData.monthly.push(md); }
+                    md.items.push({ date: now.toISOString(), model: model, price: m.price });
+                    usageData.total.count = (usageData.total.count || 0) + 1;
+                    usageData.total.cost = (usageData.total.cost || 0) + m.price;
+                    localStorage.setItem('manga_usage', JSON.stringify(usageData));
+                    setUsage(usageData);
+                  } catch(e) {
+                    console.error('使用量記録エラー:', e);
+                  }
                 } else {
                   // テキスト生成の場合、次のステップの入力として保存
                   stepOutputs.push(output);
@@ -2005,20 +2318,307 @@
         Promise.all(promises)
           .then(function() {
             setIsGen(false);
+            setGenStartTime(null);
             setCurrentStep(0);
             console.log('全' + genCount + '枚の生成が完了しました');
           })
           .catch(function(e) {
             setError('エラー: ' + e.message);
             setIsGen(false);
+            setGenStartTime(null);
             setCurrentStep(0);
           });
       }
 
       function dl(img, i) {
+        // URLからダウンロード（Supabase Storage対応）
+        if (img.startsWith('http')) {
+          fetch(img)
+            .then(function(res) { return res.blob(); })
+            .then(function(blob) {
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = url;
+              a.download = 'manga_' + Date.now() + '_' + (i + 1) + '.png';
+              a.click();
+              URL.revokeObjectURL(url);
+            })
+            .catch(function(e) {
+              console.error('ダウンロードエラー:', e);
+              alert('ダウンロードに失敗しました');
+            });
+        } else {
+          // Base64の場合（従来の方法）
+          var a = document.createElement('a');
+          a.href = img;
+          a.download = 'manga_' + Date.now() + '_' + (i + 1) + '.png';
+          a.click();
+        }
+      }
+
+      // キャラクターシート生成関連
+      function handleCharSheetImageUpload(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          setError('ファイルサイズは10MB以下にしてください');
+          return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function(event) {
+          setCharSheetBaseImg(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function generateCharacterSheets() {
+        if (!charSheetName) {
+          setError('キャラクター名を入力してください');
+          return;
+        }
+        if (!charSheetBaseImg && !charSheetDesc) {
+          setError('ベース画像またはキャラクター説明のどちらかを入力してください');
+          return;
+        }
+        if (!apiKey) {
+          setError('APIキーを設定してください');
+          return;
+        }
+
+        setCharSheetGenStep(1);
+        setError('');
+        setGeneratedCharSheets([]);
+        setCurCharSheet(0);
+        setCharSheetSaved([]);
+
+        try {
+          var promptTemplate = await fetch('./prompts/キャラクターシート_image.txt')
+            .then(function(res) { return res.text(); })
+            .catch(function() {
+              return '⚠️ CRITICAL: Create a professional character sheet with EXACTLY 5 variations in a single image\n\n【CHARACTER DESCRIPTION】\n{{CHARACTER_DESCRIPTION}}\n\n【ART STYLE】\n{{STYLE_PROMPT}}\n\nLayout: Top row: Neutral (left), Smile (right) | Bottom row: Front (left), Side (center), Back (right)';
+            });
+
+          var allStyles = getAllStyles();
+          var selectedStyle = allStyles.find(function(s) { return s.id === style; });
+          var description = charSheetDesc || '添付されたベース画像のキャラクターの特徴を分析し、その特徴を忠実に再現してください';
+          var prompt = promptTemplate
+            .replace(/\{\{CHARACTER_DESCRIPTION\}\}/g, description)
+            .replace(/\{\{STYLE_PROMPT\}\}/g, selectedStyle.prompt);
+
+          var selectedModel = MODELS.find(function(m) { return m.id === model; });
+          var modelName = selectedModel.model;
+          var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent?key=' + apiKey;
+
+          var currentSheets = new Array(charSheetCount);
+
+          function generateOne(sheetIndex) {
+            return (async function() {
+              var parts = [{ text: prompt }];
+
+              try {
+                var templateResponse = await fetch('./キャラクターシート_テンプレート.jpeg');
+                var templateBlob = await templateResponse.blob();
+                var templateBase64 = await new Promise(function(resolve) {
+                  var reader = new FileReader();
+                  reader.onloadend = function() { resolve(reader.result); };
+                  reader.readAsDataURL(templateBlob);
+                });
+                parts.push({
+                  inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: templateBase64.split(',')[1]
+                  }
+                });
+              } catch (e) {
+                console.warn('テンプレート画像の読み込みに失敗:', e.message);
+              }
+
+              if (charSheetBaseImg) {
+                parts.push({
+                  inlineData: {
+                    mimeType: 'image/png',
+                    data: charSheetBaseImg.split(',')[1]
+                  }
+                });
+              }
+
+              var response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: parts }],
+                  generationConfig: {
+                    responseModalities: ['IMAGE'],
+                    temperature: 0.3,
+                    topP: 0.8,
+                    topK: 30,
+                    candidateCount: 1
+                  }
+                })
+              });
+
+              if (!response.ok) {
+                var errorData = await response.json();
+                throw new Error(errorData.error?.message || 'API呼び出しに失敗しました');
+              }
+
+              var data = await response.json();
+              var imageData = data.candidates?.[0]?.content?.parts?.find(function(p) { return p.inlineData; })?.inlineData?.data;
+
+              if (!imageData) throw new Error('画像生成に失敗しました');
+
+              var generatedImage = 'data:image/jpeg;base64,' + imageData;
+              currentSheets[sheetIndex] = generatedImage;
+
+              var completedSheets = currentSheets.filter(function(sheet) { return sheet !== undefined; });
+              setGeneratedCharSheets(completedSheets);
+              setCurCharSheet(completedSheets.length - 1);
+
+              return generatedImage;
+            })();
+          }
+
+          var promises = [];
+          for (var i = 0; i < charSheetCount; i++) {
+            promises.push(generateOne(i));
+          }
+
+          await Promise.all(promises);
+
+        } catch (err) {
+          console.error('キャラクターシート生成エラー:', err);
+          setError('生成エラー: ' + err.message);
+        } finally {
+          setCharSheetGenStep(0);
+        }
+      }
+
+      async function saveCharSheetToLibrary(sheetImage, index) {
+        // 保存済みとして即座にマーク（ボタンをすぐ切り替える）
+        if (charSheetSaved.indexOf(index) === -1) {
+          setCharSheetSaved(charSheetSaved.concat([index]));
+        }
+
+        try {
+          // Base64をBlobに変換
+          var base64Data = sheetImage.split(',')[1];
+          var byteCharacters = atob(base64Data);
+          var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          var byteArray = new Uint8Array(byteNumbers);
+          var blob = new Blob([byteArray], { type: 'image/png' });
+
+          // Supabase Storageにアップロード
+          var fileName = user.id + '/charsheet_' + Date.now() + '_' + index + '.png';
+          var uploadResult = await supabase.storage
+            .from('manga-images')
+            .upload(fileName, blob, {
+              contentType: 'image/png',
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadResult.error) {
+            console.error('画像アップロードエラー:', uploadResult.error);
+            setError('画像のアップロードに失敗しました: ' + uploadResult.error.message);
+            return;
+          }
+
+          // 公開URLを取得
+          var publicUrlResult = supabase.storage
+            .from('manga-images')
+            .getPublicUrl(fileName);
+          var publicUrl = publicUrlResult.data.publicUrl;
+
+          // データベースに保存
+          var allStyles = getAllStyles();
+          var selectedStyle = allStyles.find(function(s) { return s.id === style; });
+
+          var insertResult = await supabase
+            .from('character_sheets')
+            .insert([{
+              user_id: user.id,
+              name: charSheetName + (charSheetCount > 1 ? ' (' + (index + 1) + ')' : ''),
+              description: charSheetDesc || '',
+              style_id: style,
+              style_name: selectedStyle ? selectedStyle.title : '',
+              sheet_image_url: publicUrl,
+              base_image_url: charSheetBaseImg
+            }])
+            .select();
+
+          if (insertResult.error) {
+            console.error('データベース保存エラー:', insertResult.error);
+            setError('保存に失敗しました: ' + insertResult.error.message);
+            return;
+          }
+
+          // character_sheetsを再読み込み
+          loadCharacterSheets();
+
+        } catch (err) {
+          console.error('保存エラー:', err);
+          setError('保存に失敗しました: ' + err.message);
+        }
+      }
+
+      async function loadCharacterSheets() {
+        if (!user) return;
+
+        try {
+          var result = await supabase
+            .from('character_sheets')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (result.error) {
+            console.error('キャラクターシート読み込みエラー:', result.error);
+            return;
+          }
+
+          setCharacterSheets(result.data || []);
+
+          // Supabaseのキャラクターシートをchars形式に変換
+          var supabaseChars = (result.data || []).map(function(sheet) {
+            return {
+              id: 'supabase_' + sheet.id,
+              name: sheet.name,
+              img: sheet.sheet_image_url,
+              desc: sheet.description || '',
+              source: 'supabase'
+            };
+          });
+
+          // localStorageのキャラクターを取得
+          var localChars = [];
+          try {
+            var saved = localStorage.getItem('manga_chars');
+            if (saved) {
+              localChars = JSON.parse(saved).filter(function(c) {
+                return !c.source || c.source !== 'supabase';
+              });
+            }
+          } catch(e) {
+            console.error('localStorage読み込みエラー:', e);
+          }
+
+          // 統合して表示（Supabaseのシートを先頭に）
+          setChars(supabaseChars.concat(localChars));
+
+        } catch (err) {
+          console.error('読み込みエラー:', err);
+        }
+      }
+
+      function downloadCharSheet(sheetImage, index) {
         var a = document.createElement('a');
-        a.href = img;
-        a.download = 'manga_' + Date.now() + '_' + (i + 1) + '.png';
+        a.href = sheetImage;
+        a.download = 'character_sheet_' + charSheetName + '_' + (index + 1) + '_' + Date.now() + '.png';
         a.click();
       }
 
@@ -2026,6 +2626,96 @@
         var nf = favHist.indexOf(id) >= 0 ? favHist.filter(function(x) { return x !== id; }) : favHist.concat([id]);
         setFavHist(nf);
         localStorage.setItem('manga_fav_hist', JSON.stringify(nf));
+      }
+
+      // 古い画像の自動削除（最新10件 + お気に入り以外を削除）
+      async function cleanupOldImages() {
+        try {
+          console.log('古い画像のクリーンアップを開始...');
+
+          // お気に入り情報をlocalStorageから取得（state より確実）
+          var favHistIds = [];
+          try {
+            var fh = localStorage.getItem('manga_fav_hist');
+            if (fh) favHistIds = JSON.parse(fh);
+          } catch (e) {
+            console.warn('お気に入り情報の読み込みエラー:', e);
+          }
+
+          // 1. ユーザーの全ての履歴を取得
+          var allHistResult = await supabase
+            .from('mangas')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (allHistResult.error) throw allHistResult.error;
+
+          var allHistory = allHistResult.data;
+          console.log('総履歴数:', allHistory.length + '件');
+
+          // 2. 削除対象を特定（最新10件より古い + お気に入りでない）
+          var toDelete = allHistory.slice(10).filter(function(item) {
+            return favHistIds.indexOf(item.id) === -1; // お気に入りでないもの
+          });
+
+          if (toDelete.length === 0) {
+            console.log('削除対象の画像はありません');
+            return;
+          }
+
+          console.log('削除対象:', toDelete.length + '件');
+
+          // 3. 各画像をStorageとDBから削除
+          for (var i = 0; i < toDelete.length; i++) {
+            var item = toDelete[i];
+
+            // Storage から削除（URLからファイルパスを抽出）
+            if (item.image_url) {
+              try {
+                var url = item.image_url;
+                // URLから "manga-images/" 以降のパスを抽出
+                var match = url.match(/manga-images\/(.+)$/);
+                if (match) {
+                  var filePath = match[1];
+                  var deleteResult = await supabase.storage
+                    .from('manga-images')
+                    .remove([filePath]);
+
+                  if (deleteResult.error) {
+                    console.warn('Storage削除エラー (続行):', deleteResult.error);
+                  } else {
+                    console.log('Storage削除成功:', filePath);
+                  }
+                }
+              } catch (err) {
+                console.warn('Storage削除エラー (続行):', err);
+              }
+            }
+
+            // Database から削除
+            try {
+              var dbDeleteResult = await supabase
+                .from('mangas')
+                .delete()
+                .eq('id', item.id);
+
+              if (dbDeleteResult.error) {
+                console.warn('DB削除エラー (続行):', dbDeleteResult.error);
+              } else {
+                console.log('DB削除成功:', item.id);
+              }
+            } catch (err) {
+              console.warn('DB削除エラー (続行):', err);
+            }
+          }
+
+          console.log('古い画像のクリーンアップが完了しました (' + toDelete.length + '件削除)');
+
+        } catch (err) {
+          console.error('クリーンアップエラー:', err);
+          // ユーザーには通知しない（エラーがあっても生成は継続）
+        }
       }
 
       function saveProj() {
@@ -2264,6 +2954,12 @@
                   })}
                   <button onClick=${function() { setShowAddChar(true); }} class="flex-shrink-0 w-14 h-14 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">+</button>
                 </div>
+                <button
+                  onClick=${function() { setActiveTab('character-sheet'); }}
+                  class="mt-2 w-full px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  + シート生成
+                </button>
               </div>
             </div>
 
@@ -2274,7 +2970,7 @@
               </button>
               <div class="accordion-content ${accord.indexOf('char') >= 0 ? 'open' : ''}">
                 <div class="grid grid-cols-4 gap-2 py-2">
-                  ${['説明者*', '相談者', '参考3', '参考4'].map(function(label, idx) { return html`<div key=${idx} class="border-2 ${selChars[idx] ? 'border-blue-400' : 'border-dashed border-gray-300'} rounded-lg p-1"><div class="text-xs text-gray-500 text-center mb-1">${label}</div>${selChars[idx] ? html`<div><div class="relative cursor-pointer" onClick=${function() { openCharDetail(idx); }}><img src=${selChars[idx].img} class="w-full h-14 object-cover rounded" /><button onClick=${function(e) { e.stopPropagation(); var nc = selChars.slice(); nc[idx] = null; setSelChars(nc); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div><button onClick=${function() { openCharDetail(idx); }} class="text-xs text-blue-500 mt-1 hover:text-blue-600 w-full text-center">詳細を編集</button></div>` : html`<div class="h-14 flex items-center justify-center bg-gray-50 rounded cursor-pointer hover:bg-gray-100" onClick=${function() { charRefs.current[idx] && charRefs.current[idx].click(); }}><span class="text-gray-400 text-xs">+</span></div>`}<input ref=${function(el) { charRefs.current[idx] = el; }} type="file" accept="image/*" class="hidden" onChange=${function(e) { handleFile(e, idx); }} /></div>`; })}
+                  ${['説明者*', '相談者', '参考3', '参考4'].map(function(label, idx) { return html`<div key=${idx} class="border-2 ${selChars[idx] ? 'border-blue-400' : 'border-dashed border-gray-300'} rounded-lg p-1"><div class="text-xs text-gray-500 text-center mb-1">${label}</div>${selChars[idx] ? html`<div><div class="relative cursor-pointer" onClick=${function() { openCharDetail(idx); }}><img src=${selChars[idx].img} class="w-full h-14 object-cover rounded" /><button onClick=${function(e) { e.stopPropagation(); var nc = selChars.slice(); nc[idx] = null; setSelChars(nc); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div><button onClick=${function() { openCharDetail(idx); }} class="text-xs text-blue-500 mt-1 hover:text-blue-600 w-full text-center">詳細を編集</button></div>` : html`<div class="h-14 flex items-center justify-center bg-gray-50 rounded cursor-pointer hover:bg-gray-100" onClick=${function() { charRefs.current[idx] && charRefs.current[idx].click(); }}><span class="text-gray-400 text-xs">+</span></div>`}<input ref=${function(el) { charRefs.current[idx] = el; }} type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onChange=${function(e) { handleFile(e, idx); }} /></div>`; })}
                 </div>
               </div>
             </div>
@@ -2295,7 +2991,7 @@
                   <span class="text-xl">+</span>
                   <span class="text-sm">カスタムスタイル追加</span>
                 </button>
-                ${style === 99 && html`<div class="mt-2 p-2 border border-dashed rounded-lg"><div class="text-xs text-gray-500 mb-2">参照画像</div>${styleRef ? html`<div class="relative inline-block"><img src=${styleRef.img} class="h-16 rounded" /><button onClick=${function() { setStyleRef(null); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<button onClick=${function() { styleRefInput.current && styleRefInput.current.click(); }} class="text-sm text-blue-500">+ 画像選択</button>`}<input ref=${styleRefInput} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setStyleRef({ img: ev.target.result }); }; r.readAsDataURL(f); }} /></div>`}
+                ${style === 99 && html`<div class="mt-2 p-2 border border-dashed rounded-lg"><div class="text-xs text-gray-500 mb-2">参照画像</div>${styleRef ? html`<div class="relative inline-block"><img src=${styleRef.img} class="h-16 rounded" /><button onClick=${function() { setStyleRef(null); }} class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs">×</button></div>` : html`<button onClick=${function() { styleRefInput.current && styleRefInput.current.click(); }} class="text-sm text-blue-500">+ 画像選択</button>`}<input ref=${styleRefInput} type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; try { validateImageFile(f); var r = new FileReader(); r.onload = function(ev) { setStyleRef({ img: ev.target.result }); }; r.readAsDataURL(f); } catch (err) { alert(err.message); e.target.value = ''; } }} /></div>`}
               </div>
             </div>
 
@@ -2433,6 +3129,31 @@
               </div>
             </div>
 
+            <!-- タブナビゲーション -->
+            <div class="mb-6 border-b border-gray-200">
+              <nav class="flex gap-6">
+                <button
+                  onClick=${function() { setActiveTab('manga'); }}
+                  class="pb-3 px-2 border-b-2 font-medium transition-colors ${activeTab === 'manga' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                >
+                  漫画生成
+                </button>
+                <button
+                  onClick=${function() { setActiveTab('character-sheet'); }}
+                  class="pb-3 px-2 border-b-2 font-medium transition-colors ${activeTab === 'character-sheet' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                >
+                  キャラクターシート
+                </button>
+                <button
+                  onClick=${function() { setActiveTab('history'); setShowHist(true); }}
+                  class="pb-3 px-2 border-b-2 font-medium transition-colors ${activeTab === 'history' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                >
+                  生成履歴
+                </button>
+              </nav>
+            </div>
+
+            ${activeTab === 'manga' && html`
             <div class="mb-6 card animate-fadeIn">
               <div class="flex items-center mb-3">
                 <span class="text-lg font-semibold" style="color: var(--color-text-primary);">ストーリー・記事内容</span>
@@ -2440,7 +3161,7 @@
               </div>
               <textarea
                 value=${story}
-                onInput=${function(e) { setStory(e.target.value); }}
+                onInput=${function(e) { setStory(sanitizeInput(e.target.value, 5000)); }}
                 placeholder="漫画にしたい内容を入力..."
                 class="input-field w-full h-40 resize-y"
                 style="font-family: var(--font-family);"
@@ -2455,12 +3176,14 @@
                   [詳細を見る]
                 </button>
               </div>
-            </div>
 
-            <div class="mb-6 glass-card animate-fadeIn flex flex-wrap items-center gap-4">
-              <span class="text-sm font-medium" style="color: var(--color-text-primary);">生成枚数</span>
-              <div class="flex gap-2">${[1, 2, 3, 4, 5].map(function(n) { return html`<button key=${n} onClick=${function() { setGenCount(n); }} class="w-10 h-10 rounded-lg border-2 transition-all hover-lift ${genCount === n ? 'bg-blue-50' : ''}" style="border-color: ${genCount === n ? 'var(--color-primary)' : 'var(--color-border)'};">${n}</button>`; })}</div>
-              <div class="text-sm" style="color: var(--color-text-secondary);">予想: $${est().usd}（約${est().jpy}円）</div>
+              <div class="mt-4 pt-4" style="border-top: 1px solid var(--color-border);">
+                <div class="flex flex-wrap items-center gap-4">
+                  <span class="text-sm font-medium" style="color: var(--color-text-primary);">生成枚数</span>
+                  <div class="flex gap-2">${[1, 2, 3, 4, 5].map(function(n) { return html`<button key=${n} onClick=${function() { setGenCount(n); }} class="w-10 h-10 rounded-lg border-2 transition-all hover-lift ${genCount === n ? 'bg-blue-50' : ''}" style="border-color: ${genCount === n ? 'var(--color-primary)' : 'var(--color-border)'};">${n}</button>`; })}</div>
+                  <div class="text-sm" style="color: var(--color-text-secondary);">予想: $${est().usd}（約${est().jpy}円）</div>
+                </div>
+              </div>
             </div>
 
             <div class="mb-6">
@@ -2469,7 +3192,7 @@
                   <div class="flex items-center justify-between mb-3">
                     <div>
                       <div class="font-semibold" style="color: var(--color-text-primary);">生成中... ${genIdx + 1}/${genCount}枚</div>
-                      ${currentStep > 0 && totalSteps > 0 && html`<div class="text-sm mt-1" style="color: var(--color-info);">Step ${currentStep}/${totalSteps}: ${promptSteps[currentStep - 1] ? promptSteps[currentStep - 1].name : ''}中...</div>`}
+                      ${elapsedTime > 0 && html`<div class="text-sm mt-1" style="color: var(--color-info);">経過時間: ${elapsedTime}秒</div>`}
                     </div>
                     <button
                       onClick=${function() { cancelRef.current = true; }}
@@ -2562,6 +3285,223 @@
                 <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">${history.slice(0, 5).map(function(h) { return html`<div key=${h.id} class="flex-shrink-0 cursor-pointer relative" onClick=${function() { setHistDet(h); setShowHistDet(true); }}>${favHist.indexOf(h.id) >= 0 && html`<div class="absolute top-1 left-1 text-yellow-500">★</div>`}<img src=${h.img} class="w-20 h-28 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400" /></div>`; })}</div>
               </div>
             `}
+            `}
+
+            ${activeTab === 'character-sheet' && html`
+            <div class="max-w-3xl mx-auto animate-fadeIn">
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                    キャラクター名 *
+                  </label>
+                  <input
+                    type="text"
+                    value=${charSheetName}
+                    onInput=${function(e) { setCharSheetName(e.target.value); }}
+                    placeholder="例: 山田太郎"
+                    class="input-field w-full"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                    ベース画像
+                  </label>
+                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <input
+                      type="file"
+                      ref=${charSheetFileRef}
+                      onChange=${handleCharSheetImageUpload}
+                      accept="image/png,image/jpeg,image/webp"
+                      class="hidden"
+                    />
+                    ${charSheetBaseImg ? html`
+                      <div class="space-y-3">
+                        <img
+                          src=${charSheetBaseImg}
+                          class="w-32 h-32 object-cover rounded-lg mx-auto border-2 border-gray-300"
+                        />
+                        <div class="flex gap-2 justify-center">
+                          <button
+                            onClick=${function() { charSheetFileRef.current?.click(); }}
+                            class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                          >
+                            変更
+                          </button>
+                          <button
+                            onClick=${function() { setCharSheetBaseImg(null); }}
+                            class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </div>
+                    ` : html`
+                      <div class="space-y-2">
+                        <button
+                          onClick=${function() { charSheetFileRef.current?.click(); }}
+                          class="text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          ファイルを選択
+                        </button>
+                        <p class="text-xs text-gray-500">
+                          PNG, JPG, WEBP (最大10MB)
+                        </p>
+                      </div>
+                    `}
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                    キャラクター説明
+                  </label>
+                  <textarea
+                    value=${charSheetDesc}
+                    onInput=${function(e) { setCharSheetDesc(e.target.value); }}
+                    placeholder="例:${'\n'}25歳男性、短い黒髪、茶色い瞳${'\n'}グレーのスーツに青いネクタイ${'\n'}優しい笑顔、細身の体型${'\n'}${'\n'}※ベース画像だけでも生成できます"
+                    rows="4"
+                    class="input-field w-full"
+                    style="resize: vertical;"
+                  ></textarea>
+                  <div class="text-xs text-gray-500 mt-1">
+                    ${charSheetDesc.length} / 500文字
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                    絵のテイスト
+                  </label>
+                  <div class="p-3 bg-gray-100 rounded-lg border border-gray-300">
+                    <div class="text-sm text-gray-700">
+                      現在選択中: <span class="font-semibold">${(function() {
+                        var allStyles = getAllStyles();
+                        var currentStyle = allStyles.find(function(s) { return s.id === style; });
+                        return currentStyle ? currentStyle.title : '未選択';
+                      })()}</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                      左メニューの「絵のテイスト」から変更できます
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-4 pt-4" style="border-top: 1px solid var(--color-border);">
+                  <div class="flex flex-wrap items-center gap-4">
+                    <span class="text-sm font-medium" style="color: var(--color-text-primary);">生成枚数</span>
+                    <div class="flex gap-2">
+                      ${[1, 2, 3, 4, 5].map(function(n) {
+                        return html`
+                          <button
+                            key=${n}
+                            onClick=${function() { setCharSheetCount(n); }}
+                            class="w-10 h-10 rounded-lg border-2 transition-all hover-lift ${charSheetCount === n ? 'bg-blue-50' : ''}"
+                            style="border-color: ${charSheetCount === n ? 'var(--color-primary)' : 'var(--color-border)'};"
+                          >
+                            ${n}
+                          </button>
+                        `;
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                ${charSheetGenStep > 0 ? html`
+                  <div class="mb-6 p-4 rounded-lg bg-blue-50 border-2 border-blue-200">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-blue-800">キャラクターシート生成中...</span>
+                      <span class="text-sm text-blue-600">${generatedCharSheets.length} / ${charSheetCount}枚</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-2 mb-2">
+                      <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: ${(generatedCharSheets.length / charSheetCount) * 100}%"></div>
+                    </div>
+                    <div class="text-xs text-blue-600">並列生成中...</div>
+                  </div>
+                ` : html`
+                  <button
+                    onClick=${generateCharacterSheets}
+                    disabled=${!charSheetName || (!charSheetBaseImg && !charSheetDesc)}
+                    class="btn-primary w-full ${charSheetName && (charSheetBaseImg || charSheetDesc) ? 'hover-scale' : ''}"
+                    style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); padding: var(--spacing-4) var(--spacing-6); ${!charSheetName || (!charSheetBaseImg && !charSheetDesc) ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+                  >
+                    キャラクターシート生成（${charSheetCount}枚）
+                  </button>
+                `}
+
+                ${error && html`<div class="alert alert-error mt-3 text-center">${error}</div>`}
+              </div>
+
+              <div class="mb-6 mt-6">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-lg font-semibold text-gray-700">生成されたキャラクターシート</span>
+                  ${generatedCharSheets.length > 0 && html`<span class="text-sm text-gray-500">${curCharSheet + 1}/${generatedCharSheets.length}枚</span>`}
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 min-h-64 flex items-center justify-center relative">
+                  ${generatedCharSheets.length > 0 ? html`
+                    ${curCharSheet > 0 && html`
+                      <button
+                        onClick=${function() { setCurCharSheet(curCharSheet - 1); }}
+                        class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all z-10"
+                      >
+                        ←
+                      </button>
+                    `}
+                    <img
+                      src=${generatedCharSheets[curCharSheet]}
+                      class="max-w-full max-h-[500px] rounded-lg shadow-lg cursor-pointer"
+                      onClick=${function() { setModalImg(generatedCharSheets[curCharSheet]); setModalImgIdx(curCharSheet); setShowImg(true); }}
+                    />
+                    ${curCharSheet < generatedCharSheets.length - 1 && html`
+                      <button
+                        onClick=${function() { setCurCharSheet(curCharSheet + 1); }}
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all z-10"
+                      >
+                        →
+                      </button>
+                    `}
+                  ` : html`<div class="text-gray-400 text-center"><div class="text-4xl mb-2">○</div><div>ここにキャラクターシートが表示されます</div></div>`}
+                </div>
+                ${generatedCharSheets.length > 1 && html`<div class="flex justify-center gap-2 mt-4">${generatedCharSheets.map(function(_, i) { return html`<button key=${i} onClick=${function() { setCurCharSheet(i); }} class="w-10 h-10 rounded-lg border-2 ${curCharSheet === i ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}">${i + 1}</button>`; })}</div>`}
+                ${generatedCharSheets.length > 0 && html`
+                  <div class="flex gap-3 mt-4 justify-center">
+                    <button
+                      onClick=${function() {
+                        saveCharSheetToLibrary(generatedCharSheets[curCharSheet], curCharSheet);
+                      }}
+                      class="px-4 py-2 text-white text-sm rounded-lg transition-colors ${charSheetSaved.indexOf(curCharSheet) >= 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'}"
+                    >
+                      ${charSheetSaved.indexOf(curCharSheet) >= 0 ? '✓ 保存済み' : 'ライブラリに保存'}
+                    </button>
+                    <button
+                      onClick=${function() { downloadCharSheet(generatedCharSheets[curCharSheet], curCharSheet); }}
+                      class="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600"
+                    >
+                      ダウンロード
+                    </button>
+                    ${generatedCharSheets.length > 1 && html`
+                      <button
+                        onClick=${async function() {
+                          for (var i = 0; i < generatedCharSheets.length; i++) {
+                            await saveCharSheetToLibrary(generatedCharSheets[i], i);
+                          }
+                        }}
+                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                      >
+                        全て保存
+                      </button>
+                    `}
+                    <button
+                      onClick=${function() { setGeneratedCharSheets([]); setCurCharSheet(0); setCharSheetSaved([]); }}
+                      class="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600"
+                    >
+                      クリア
+                    </button>
+                  </div>
+                `}
+              </div>
+            </div>
+            `}
           </div>
 
           <${Modal} isOpen=${showTut} onClose=${function() { setShowTut(false); }} title="使い方" size="md">
@@ -2582,12 +3522,67 @@
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${SAMPLES.map(function(s) { return html`<div key=${s.id} class="border rounded-lg p-3"><div class="bg-gray-200 h-32 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">サンプル画像</div><div class="text-sm font-semibold">${s.title}</div><div class="text-xs text-gray-500">${s.cat}</div></div>`; })}</div>
           <//>
 
-          <${Modal} isOpen=${showHist} onClose=${function() { setShowHist(false); }} title="生成履歴" size="lg">
-            <div class="grid grid-cols-3 md:grid-cols-4 gap-3">${history.map(function(h) { return html`<div key=${h.id} class="cursor-pointer relative" onClick=${function() { setHistDet(h); setShowHistDet(true); setShowHist(false); }}>${favHist.indexOf(h.id) >= 0 && html`<div class="absolute top-1 left-1 text-yellow-500 z-10">★</div>`}<img src=${h.img} class="w-full h-32 object-cover rounded-lg border-2 border-gray-200" /></div>`; })}</div>
+          <${Modal} isOpen=${showHist} onClose=${function() { setShowHist(false); }} title="生成履歴" size="full">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">${history.map(function(h) { return html`<div key=${h.id} class="cursor-pointer relative hover:scale-105 transition-transform" onClick=${function() { setHistDet(h); setShowHistDet(true); setShowHist(false); }}>${favHist.indexOf(h.id) >= 0 && html`<div class="absolute top-2 left-2 text-yellow-500 z-10 text-2xl">★</div>`}<img src=${h.img} class="w-full h-80 object-cover rounded-lg border-2 border-gray-200 shadow-lg" /></div>`; })}</div>
           <//>
 
           <${Modal} isOpen=${showHistDet} onClose=${function() { setShowHistDet(false); }} title="詳細" size="lg">
-            ${histDet && html`<div class="flex flex-col md:flex-row gap-4"><div class="flex-1"><img src=${histDet.img} class="w-full rounded-lg cursor-pointer" onClick=${function() { setModalImg(histDet.img); setShowImg(true); }} /></div><div class="flex-1"><h4 class="font-semibold mb-2">生成設定</h4><div class="space-y-2 text-sm"><div>テイスト: ${histDet.settings ? histDet.settings.styleName : '-'}</div><div>セリフ: ${histDet.settings && histDet.settings.speech === 'formal' ? '敬語' : 'タメ口'}</div><div>モデル: ${histDet.settings ? histDet.settings.modelName : '-'}</div><div>日時: ${new Date(histDet.ts).toLocaleString()}</div></div><div class="flex gap-2 mt-4"><button onClick=${function() { toggleFavHist(histDet.id); }} class="px-3 py-2 border rounded-lg ${favHist.indexOf(histDet.id) >= 0 ? 'border-yellow-500 bg-yellow-50' : ''}">${favHist.indexOf(histDet.id) >= 0 ? '★ 解除' : '☆ 登録'}</button><button onClick=${function() { dl(histDet.img, 0); }} class="px-3 py-2 bg-blue-500 text-white rounded-lg">DL</button></div></div></div>`}
+            ${histDet && (function() {
+              var currentIndex = history.findIndex(function(h) { return h.id === histDet.id; });
+              var hasPrev = currentIndex < history.length - 1;
+              var hasNext = currentIndex > 0;
+              return html`
+                <div class="flex flex-col md:flex-row gap-4">
+                  <div class="flex-1">
+                    <img src=${histDet.img} class="w-full rounded-lg cursor-pointer" onClick=${function() { setModalImg(histDet.img); setShowImg(true); }} />
+                    <div class="text-center text-sm text-gray-500 mt-2">${currentIndex + 1} / ${history.length}</div>
+                  </div>
+
+                  <div class="flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                      <button
+                        onClick=${function() { setHistDet(history[currentIndex + 1]); }}
+                        disabled=${!hasPrev}
+                        class="px-4 py-2 rounded-lg font-semibold transition-all ${hasPrev ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}"
+                        style="min-width: 80px;"
+                      >
+                        ‹ 前へ
+                      </button>
+                      <button
+                        onClick=${function() { setHistDet(history[currentIndex - 1]); }}
+                        disabled=${!hasNext}
+                        class="px-4 py-2 rounded-lg font-semibold transition-all ${hasNext ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}"
+                        style="min-width: 80px;"
+                      >
+                        次へ ›
+                      </button>
+                    </div>
+
+                    <h4 class="font-semibold mb-2">生成設定</h4>
+                    <div class="space-y-2 text-sm mb-4">
+                      <div>テイスト: ${histDet.settings ? histDet.settings.styleName : '-'}</div>
+                      <div>セリフ: ${histDet.settings && histDet.settings.speech === 'formal' ? '敬語' : 'タメ口'}</div>
+                      <div>モデル: ${histDet.settings ? histDet.settings.modelName : '-'}</div>
+                      <div>日時: ${new Date(histDet.ts).toLocaleString()}</div>
+                    </div>
+                    <div class="flex gap-2">
+                      <button
+                        onClick=${function() { toggleFavHist(histDet.id); }}
+                        class="px-3 py-2 border rounded-lg ${favHist.indexOf(histDet.id) >= 0 ? 'border-yellow-500 bg-yellow-50' : ''}"
+                      >
+                        ${favHist.indexOf(histDet.id) >= 0 ? '★ 解除' : '☆ 登録'}
+                      </button>
+                      <button
+                        onClick=${function() { dl(histDet.img, currentIndex); }}
+                        class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                      >
+                        DL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            })()}
           <//>
 
           <${Modal} isOpen=${showUsage} onClose=${function() { setShowUsage(false); }} title="使用量" size="md">
@@ -2598,22 +3593,22 @@
           <//>
 
           <${Modal} isOpen=${showAddChar} onClose=${function() { setShowAddChar(false); setNewCharName(''); setNewCharImg(null); }} title="キャラクター追加" size="sm">
-            <input type="text" value=${newCharName} onInput=${function(e) { setNewCharName(e.target.value); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <input type="text" value=${newCharName} onInput=${function(e) { setNewCharName(sanitizeInput(e.target.value, 50)); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
             <div class="border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer" onClick=${function() { fileRef.current && fileRef.current.click(); }}>${newCharImg ? html`<img src=${newCharImg} class="max-h-32 mx-auto rounded" />` : html`<div class="text-gray-400"><div class="text-3xl mb-2">+</div><div>画像を選択</div></div>`}</div>
-            <input ref=${fileRef} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { setNewCharImg(ev.target.result); }; r.readAsDataURL(f); }} />
+            <input ref=${fileRef} type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; try { validateImageFile(f); var r = new FileReader(); r.onload = function(ev) { setNewCharImg(ev.target.result); }; r.readAsDataURL(f); } catch (err) { alert(err.message); e.target.value = ''; } }} />
             <div class="flex gap-3"><button onClick=${function() { setShowAddChar(false); setNewCharName(''); setNewCharImg(null); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${addChar} disabled=${!newCharName || !newCharImg} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">追加</button></div>
           <//>
 
           <${Modal} isOpen=${showEditChar} onClose=${function() { setShowEditChar(false); setEditingCharId(null); setEditCharName(''); setEditCharImg(null); }} title="キャラクター編集" size="sm">
-            <input type="text" value=${editCharName} onInput=${function(e) { setEditCharName(e.target.value); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <input type="text" value=${editCharName} onInput=${function(e) { setEditCharName(sanitizeInput(e.target.value, 50)); }} placeholder="名前" class="w-full px-3 py-2 border rounded-lg mb-4" />
             <div class="border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer" onClick=${function() { editFileRef.current && editFileRef.current.click(); }}>${editCharImg ? html`<img src=${editCharImg} class="max-h-32 mx-auto rounded" />` : html`<div class="text-gray-400"><div class="text-3xl mb-2">+</div><div>画像を選択</div></div>`}</div>
-            <input ref=${editFileRef} type="file" accept="image/*" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(ev) { compressImage(ev.target.result, 500, 0.7).then(function(compressed) { setEditCharImg(compressed); }); }; r.readAsDataURL(f); }} />
+            <input ref=${editFileRef} type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onChange=${function(e) { var f = e.target.files[0]; if (!f) return; try { validateImageFile(f); var r = new FileReader(); r.onload = function(ev) { compressImage(ev.target.result, 500, 0.7).then(function(compressed) { setEditCharImg(compressed); }); }; r.readAsDataURL(f); } catch (err) { alert(err.message); e.target.value = ''; } }} />
             <div class="flex gap-3"><button onClick=${function() { setShowEditChar(false); setEditingCharId(null); setEditCharName(''); setEditCharImg(null); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${updateChar} disabled=${!editCharName || !editCharImg} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">更新</button></div>
           <//>
 
           <${Modal} isOpen=${showAddProj} onClose=${function() { setShowAddProj(false); setNewProjName(''); }} title="プロジェクト保存" size="sm">
             <p class="text-sm text-gray-600 mb-4">現在の設定を保存します</p>
-            <input type="text" value=${newProjName} onInput=${function(e) { setNewProjName(e.target.value); }} placeholder="プロジェクト名" class="w-full px-3 py-2 border rounded-lg mb-4" />
+            <input type="text" value=${newProjName} onInput=${function(e) { setNewProjName(sanitizeInput(e.target.value, 100)); }} placeholder="プロジェクト名" class="w-full px-3 py-2 border rounded-lg mb-4" />
             <div class="flex gap-3"><button onClick=${function() { setShowAddProj(false); setNewProjName(''); }} class="flex-1 py-2 border rounded-lg">キャンセル</button><button onClick=${saveProj} disabled=${!newProjName} class="flex-1 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50">保存</button></div>
           <//>
 
@@ -2624,7 +3619,7 @@
                 <input
                   type="text"
                   value=${newStyleTitle}
-                  onInput=${function(e) { setNewStyleTitle(e.target.value); }}
+                  onInput=${function(e) { setNewStyleTitle(sanitizeInput(e.target.value, 50)); }}
                   placeholder="例: アニメ風"
                   class="w-full px-3 py-2 border rounded-lg"
                   maxLength="50"
@@ -2635,7 +3630,7 @@
                 <input
                   type="text"
                   value=${newStyleDesc}
-                  onInput=${function(e) { setNewStyleDesc(e.target.value); }}
+                  onInput=${function(e) { setNewStyleDesc(sanitizeInput(e.target.value, 100)); }}
                   placeholder="例: ジブリ作品のような温かみのあるアニメ風"
                   class="w-full px-3 py-2 border rounded-lg"
                   maxLength="100"
@@ -2645,7 +3640,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">プロンプト *</label>
                 <textarea
                   value=${newStylePrompt}
-                  onInput=${function(e) { setNewStylePrompt(e.target.value); }}
+                  onInput=${function(e) { setNewStylePrompt(sanitizeInput(e.target.value, 2000)); }}
                   placeholder="例: Studio Ghibli anime illustration style with warm watercolor backgrounds..."
                   class="w-full px-3 py-2 border rounded-lg h-32 resize-none"
                 ></textarea>
@@ -2676,7 +3671,7 @@
                 <input
                   type="text"
                   value=${editStyleTitle}
-                  onInput=${function(e) { setEditStyleTitle(e.target.value); }}
+                  onInput=${function(e) { setEditStyleTitle(sanitizeInput(e.target.value, 50)); }}
                   placeholder="例: アニメ風"
                   class="w-full px-3 py-2 border rounded-lg"
                   maxLength="50"
@@ -2687,7 +3682,7 @@
                 <input
                   type="text"
                   value=${editStyleDesc}
-                  onInput=${function(e) { setEditStyleDesc(e.target.value); }}
+                  onInput=${function(e) { setEditStyleDesc(sanitizeInput(e.target.value, 100)); }}
                   placeholder="例: ジブリ作品のような温かみのあるアニメ風"
                   class="w-full px-3 py-2 border rounded-lg"
                   maxLength="100"
@@ -2697,7 +3692,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">プロンプト *</label>
                 <textarea
                   value=${editStylePrompt}
-                  onInput=${function(e) { setEditStylePrompt(e.target.value); }}
+                  onInput=${function(e) { setEditStylePrompt(sanitizeInput(e.target.value, 2000)); }}
                   placeholder="例: Studio Ghibli anime illustration style with warm watercolor backgrounds..."
                   class="w-full px-3 py-2 border rounded-lg h-32 resize-none"
                 ></textarea>
@@ -2722,65 +3717,81 @@
           <//>
 
           ${showImg && html`
-            <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-              <div class="bg-white rounded-xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col">
+            <div class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick=${function() { setShowImg(false); }}>
+              <div class="bg-white rounded-xl w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col" onClick=${function(e) { e.stopPropagation(); }}>
                 <div class="flex justify-between items-center p-4 border-b">
                   <h3 class="text-lg font-bold">プレビュー</h3>
                   <button onClick=${function() { setShowImg(false); }} class="text-gray-500 hover:text-gray-700 text-2xl leading-none">×</button>
                 </div>
                 <div class="flex gap-4 flex-1 overflow-hidden">
                   <div class="flex-1 flex items-center justify-center bg-gray-900 p-4">
-                    <img
-                      src=${genImages[modalImgIdx]}
-                      class="max-h-full max-w-full object-contain"
-                    />
+                    ${(function() {
+                      var imgList = activeTab === 'character-sheet' && generatedCharSheets.length > 0 ? generatedCharSheets : genImages;
+                      var currentImg = imgList[modalImgIdx] || modalImg;
+                      return html`
+                        <img
+                          src=${currentImg}
+                          class="max-h-full max-w-full object-contain"
+                        />
+                      `;
+                    })()}
                   </div>
                   <div class="w-64 p-4 flex flex-col gap-4 overflow-y-auto">
-                    <div class="flex flex-col gap-3">
-                      ${modalImgIdx > 0 && html`
-                        <button
-                          onClick=${function() { setModalImgIdx(modalImgIdx - 1); }}
-                          class="w-full py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-center"
+                    ${(function() {
+                      var imgList = activeTab === 'character-sheet' && generatedCharSheets.length > 0 ? generatedCharSheets : genImages;
+                      var hasMultiple = imgList.length > 1;
+                      var currentImg = imgList[modalImgIdx] || modalImg;
+
+                      return html`
+                        ${hasMultiple && html`
+                          <div class="flex flex-col gap-3">
+                            ${modalImgIdx > 0 && html`
+                              <button
+                                onClick=${function() { setModalImgIdx(modalImgIdx - 1); }}
+                                class="w-full py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-center"
+                              >
+                                ← 前へ
+                              </button>
+                            `}
+                            <div class="text-center text-gray-600 py-2">
+                              ${modalImgIdx + 1} / ${imgList.length}
+                            </div>
+                            ${modalImgIdx < imgList.length - 1 && html`
+                              <button
+                                onClick=${function() { setModalImgIdx(modalImgIdx + 1); }}
+                                class="w-full py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-center"
+                              >
+                                次へ →
+                              </button>
+                            `}
+                          </div>
+                        `}
+                        <a
+                          href=${currentImg}
+                          download=${activeTab === 'character-sheet' ? 'character_sheet_' + (modalImgIdx + 1) + '_' + Date.now() + '.png' : 'manga_' + (modalImgIdx + 1) + '_' + Date.now() + '.png'}
+                          class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-center block"
                         >
-                          ← 前へ
-                        </button>
-                      `}
-                      <div class="text-center text-gray-600 py-2">
-                        ${modalImgIdx + 1} / ${genImages.length}
-                      </div>
-                      ${modalImgIdx < genImages.length - 1 && html`
-                        <button
-                          onClick=${function() { setModalImgIdx(modalImgIdx + 1); }}
-                          class="w-full py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors text-center"
-                        >
-                          次へ →
-                        </button>
-                      `}
-                    </div>
-                    <a
-                      href=${genImages[modalImgIdx]}
-                      download=${'manga_' + (modalImgIdx + 1) + '_' + Date.now() + '.png'}
-                      class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-center block"
-                    >
-                      ダウンロード
-                    </a>
-                    ${genImages.length > 1 && html`
-                      <div class="border-t pt-4">
-                        <div class="text-sm font-medium text-gray-700 mb-2">他の画像</div>
-                        <div class="space-y-2">
-                          ${genImages.map(function(img, i) {
-                            return html`
-                              <img
-                                key=${i}
-                                src=${img}
-                                onClick=${function() { setModalImgIdx(i); }}
-                                class="w-full h-32 object-cover rounded cursor-pointer border-2 ${modalImgIdx === i ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-400 transition-all"
-                              />
-                            `;
-                          })}
-                        </div>
-                      </div>
-                    `}
+                          ダウンロード
+                        </a>
+                        ${hasMultiple && html`
+                          <div class="border-t pt-4">
+                            <div class="text-sm font-medium text-gray-700 mb-2">他の画像</div>
+                            <div class="space-y-2">
+                              ${imgList.map(function(img, i) {
+                                return html`
+                                  <img
+                                    key=${i}
+                                    src=${img}
+                                    onClick=${function() { setModalImgIdx(i); }}
+                                    class="w-full h-32 object-cover rounded cursor-pointer border-2 ${modalImgIdx === i ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-400 transition-all"
+                                  />
+                                `;
+                              })}
+                            </div>
+                          </div>
+                        `}
+                      `;
+                    })()}
                   </div>
                 </div>
               </div>
