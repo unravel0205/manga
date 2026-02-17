@@ -1676,6 +1676,22 @@
         if (char.source === 'supabase') {
           try {
             var realId = id.replace('supabase_', '');
+
+            // Storageのファイルを削除
+            if (char.img) {
+              var match = char.img.match(/manga-images\/([^?]+)/);
+              if (match) {
+                var filePath = match[1];
+                var storageResult = await supabase.storage
+                  .from('manga-images')
+                  .remove([filePath]);
+                if (storageResult.error) {
+                  console.warn('Storage削除エラー:', storageResult.error);
+                }
+              }
+            }
+
+            // DBのレコードを削除
             await supabase
               .from('character_sheets')
               .delete()
@@ -2693,8 +2709,8 @@
             if (item.image_url) {
               try {
                 var url = item.image_url;
-                // URLから "manga-images/" 以降のパスを抽出
-                var match = url.match(/manga-images\/(.+)$/);
+                // URLから "manga-images/" 以降のパスを抽出（クエリパラメータを除外）
+                var match = url.match(/manga-images\/([^?]+)/);
                 if (match) {
                   var filePath = match[1];
                   var deleteResult = await supabase.storage
