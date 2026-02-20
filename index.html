@@ -2187,14 +2187,20 @@
 
         selChars.forEach(function(c) {
           if (c && c.img) {
+            // data URLからmimeTypeを抽出
+            var mimeMatch = c.img.match(/^data:(image\/[a-z]+);base64,/);
+            var mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
             var b = c.img.split(',')[1];
-            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+            parts.push({ inlineData: { mimeType: mimeType, data: b } });
           }
         });
 
         if (style === 99 && styleRef && styleRef.img) {
+          // data URLからmimeTypeを抽出
+          var mimeMatch = styleRef.img.match(/^data:(image\/[a-z]+);base64,/);
+          var mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
           var b = styleRef.img.split(',')[1];
-          parts.push({ inlineData: { mimeType: 'image/png', data: b } });
+          parts.push({ inlineData: { mimeType: mimeType, data: b } });
         }
 
         // モデルIDに応じた解像度と日本語テキスト品質の指定をプロンプトに追加
