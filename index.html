@@ -2180,27 +2180,55 @@
         });
       }
 
+      // WebP画像をPNG形式に変換（Gemini API互換性のため）
+      async function convertWebPToPNG(dataUrl) {
+        return new Promise(function(resolve, reject) {
+          var img = new Image();
+          img.onload = function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = function() { reject(new Error('画像の変換に失敗しました')); };
+          img.src = dataUrl;
+        });
+      }
+
       // 画像生成
       async function executeImageGeneration(promptText) {
         var m = MODELS.find(function(x) { return x.id === model; });
         var parts = [];
 
-        selChars.forEach(function(c) {
+        // キャラクター画像を処理
+        for (var i = 0; i < selChars.length; i++) {
+          var c = selChars[i];
           if (c && c.img) {
-            // data URLからmimeTypeを抽出
-            var mimeMatch = c.img.match(/^data:(image\/[a-z]+);base64,/);
-            var mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-            var b = c.img.split(',')[1];
-            parts.push({ inlineData: { mimeType: mimeType, data: b } });
+            var imageData = c.img;
+
+            // WebP形式の場合はPNGに変換（Gemini API互換性のため）
+            if (c.img.startsWith('data:image/webp')) {
+              imageData = await convertWebPToPNG(c.img);
+            }
+
+            // PNGとして送信
+            var b = imageData.split(',')[1];
+            parts.push({ inlineData: { mimeType: 'image/png', data: b } });
           }
-        });
+        }
 
         if (style === 99 && styleRef && styleRef.img) {
-          // data URLからmimeTypeを抽出
-          var mimeMatch = styleRef.img.match(/^data:(image\/[a-z]+);base64,/);
-          var mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-          var b = styleRef.img.split(',')[1];
-          parts.push({ inlineData: { mimeType: mimeType, data: b } });
+          var imageData = styleRef.img;
+
+          // WebP形式の場合はPNGに変換
+          if (styleRef.img.startsWith('data:image/webp')) {
+            imageData = await convertWebPToPNG(styleRef.img);
+          }
+
+          var b = imageData.split(',')[1];
+          parts.push({ inlineData: { mimeType: 'image/png', data: b } });
         }
 
         // モデルIDに応じた解像度と日本語テキスト品質の指定をプロンプトに追加
@@ -2675,38 +2703,23 @@
         }
 
         try {
-          // 画像をWebP形式に変換
-          var webpDataUrl = await new Promise(function(resolve, reject) {
-            var img = new Image();
-            img.onload = function() {
-              var canvas = document.createElement('canvas');
-              canvas.width = img.width;
-              canvas.height = img.height;
-              var ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0);
-              // WebP形式で出力（品質90%）
-              resolve(canvas.toDataURL('image/webp', 0.90));
-            };
-            img.onerror = function() { reject(new Error('画像の変換に失敗しました')); };
-            img.src = sheetImage;
-          });
-
+          // キャラクターシートはPNG形式で保存（参照画像として使用するため、Gemini APIとの互換性を保つ）
           // Base64をBlobに変換
-          var base64Data = webpDataUrl.split(',')[1];
+          var base64Data = sheetImage.split(',')[1];
           var byteCharacters = atob(base64Data);
           var byteNumbers = new Array(byteCharacters.length);
           for (var i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
           }
           var byteArray = new Uint8Array(byteNumbers);
-          var blob = new Blob([byteArray], { type: 'image/webp' });
+          var blob = new Blob([byteArray], { type: 'image/png' });
 
           // Supabase Storageにアップロード
-          var fileName = user.id + '/charsheet_' + Date.now() + '_' + index + '.webp';
+          var fileName = user.id + '/charsheet_' + Date.now() + '_' + index + '.png';
           var uploadResult = await supabase.storage
             .from('manga-images')
             .upload(fileName, blob, {
-              contentType: 'image/webp',
+              contentType: 'image/png',
               cacheControl: '3600',
               upsert: false
             });
