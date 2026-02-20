@@ -1964,15 +1964,32 @@
 
       // 余白情報を抽出（Webtoonスタイル用）
       function extractMarginInfo(storyText) {
-        // フォーマット: 余白：上5% / #A0A0A0 ／ 下8% / #909090
+        // フォーマット1: 余白：上5% / #A0A0A0 / 3度 ／ 下8% / #909090 / -3度（角度付き）
+        // フォーマット2: 余白：上5% / #A0A0A0 ／ 下8% / #909090（角度なし = 水平）
+        var marginMatchWithAngle = storyText.match(/余白[：:]\s*上(\d+)%\s*\/\s*(#[0-9A-Fa-f]{6})\s*\/\s*(-?\d+)度\s*[／/]\s*下(\d+)%\s*\/\s*(#[0-9A-Fa-f]{6})\s*\/\s*(-?\d+)度/);
+
+        if (marginMatchWithAngle) {
+          return {
+            top: parseInt(marginMatchWithAngle[1]),
+            topColor: marginMatchWithAngle[2],
+            topAngle: parseInt(marginMatchWithAngle[3]),
+            bottom: parseInt(marginMatchWithAngle[4]),
+            bottomColor: marginMatchWithAngle[5],
+            bottomAngle: parseInt(marginMatchWithAngle[6])
+          };
+        }
+
+        // 角度なしのフォーマット
         var marginMatch = storyText.match(/余白[：:]\s*上(\d+)%\s*\/\s*(#[0-9A-Fa-f]{6})\s*[／/]\s*下(\d+)%\s*\/\s*(#[0-9A-Fa-f]{6})/);
         if (!marginMatch) return null;
 
         return {
           top: parseInt(marginMatch[1]),
           topColor: marginMatch[2],
+          topAngle: 0,
           bottom: parseInt(marginMatch[3]),
-          bottomColor: marginMatch[4]
+          bottomColor: marginMatch[4],
+          bottomAngle: 0
         };
       }
 
@@ -2167,25 +2184,59 @@
                     // 余白を追加する場合
                     var topMarginHeight = Math.round(targetHeight * marginInfo.top / 100);
                     var bottomMarginHeight = Math.round(targetHeight * marginInfo.bottom / 100);
-                    var totalHeight = targetHeight + topMarginHeight + bottomMarginHeight;
+
+                    // 角度に基づくオフセットを計算
+                    var topAngleOffset = Math.round(Math.tan(marginInfo.topAngle * Math.PI / 180) * targetWidth / 2);
+                    var bottomAngleOffset = Math.round(Math.tan(marginInfo.bottomAngle * Math.PI / 180) * targetWidth / 2);
+
+                    // 角度付き余白の場合、余白の最大高さを考慮
+                    var topMarginMaxHeight = topMarginHeight + Math.abs(topAngleOffset);
+                    var bottomMarginMaxHeight = bottomMarginHeight + Math.abs(bottomAngleOffset);
+
+                    var totalHeight = targetHeight + topMarginMaxHeight + bottomMarginMaxHeight;
 
                     var canvas = document.createElement('canvas');
                     canvas.width = targetWidth;
                     canvas.height = totalHeight;
                     var ctx = canvas.getContext('2d');
 
-                    // 上部余白を描画
-                    ctx.fillStyle = marginInfo.topColor;
-                    ctx.fillRect(0, 0, targetWidth, topMarginHeight);
-
                     // 元画像を中央に描画（1080px幅にリサイズ）
-                    ctx.drawImage(image, 0, topMarginHeight, targetWidth, targetHeight);
+                    ctx.drawImage(image, 0, topMarginMaxHeight, targetWidth, targetHeight);
 
-                    // 下部余白を描画
+                    // 上部余白を描画（斜め対応）
+                    ctx.fillStyle = marginInfo.topColor;
+                    if (marginInfo.topAngle !== 0) {
+                      // 斜めの台形を描画
+                      ctx.beginPath();
+                      ctx.moveTo(0, 0);
+                      ctx.lineTo(targetWidth, 0);
+                      ctx.lineTo(targetWidth, topMarginHeight + topAngleOffset);
+                      ctx.lineTo(0, topMarginHeight - topAngleOffset);
+                      ctx.closePath();
+                      ctx.fill();
+                    } else {
+                      // 水平な余白
+                      ctx.fillRect(0, 0, targetWidth, topMarginMaxHeight);
+                    }
+
+                    // 下部余白を描画（斜め対応）
                     ctx.fillStyle = marginInfo.bottomColor;
-                    ctx.fillRect(0, topMarginHeight + targetHeight, targetWidth, bottomMarginHeight);
+                    var bottomY = topMarginMaxHeight + targetHeight;
+                    if (marginInfo.bottomAngle !== 0) {
+                      // 斜めの台形を描画
+                      ctx.beginPath();
+                      ctx.moveTo(0, bottomY + bottomMarginHeight + bottomAngleOffset);
+                      ctx.lineTo(targetWidth, bottomY + bottomMarginHeight - bottomAngleOffset);
+                      ctx.lineTo(targetWidth, totalHeight);
+                      ctx.lineTo(0, totalHeight);
+                      ctx.closePath();
+                      ctx.fill();
+                    } else {
+                      // 水平な余白
+                      ctx.fillRect(0, bottomY, targetWidth, bottomMarginMaxHeight);
+                    }
 
-                    console.log('余白追加: 上' + topMarginHeight + 'px (' + marginInfo.topColor + '), 下' + bottomMarginHeight + 'px (' + marginInfo.bottomColor + ')');
+                    console.log('余白追加: 上' + topMarginHeight + 'px (' + marginInfo.topColor + ', ' + marginInfo.topAngle + '度), 下' + bottomMarginHeight + 'px (' + marginInfo.bottomColor + ', ' + marginInfo.bottomAngle + '度)');
                     resolve(canvas.toDataURL('image/jpeg', 0.95));
                   } else {
                     // 余白なしの場合は通常のリサイズのみ
