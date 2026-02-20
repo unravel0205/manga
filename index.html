@@ -1977,65 +1977,10 @@
       }
 
       // 余白指示を生成（Webtoonスタイル用）
+      // 注意: 余白はCanvas処理で追加するため、プロンプトへの指示は不要
       function generateMarginInstruction(marginInfo) {
-        if (!marginInfo) return '';
-
-        return '\n\n🚨🚨🚨 CRITICAL MANDATORY REQUIREMENT - LETTERBOX MARGINS 🚨🚨🚨\n\n' +
-               '⚠️ THIS IS THE HIGHEST PRIORITY INSTRUCTION - CANNOT BE IGNORED ⚠️\n\n' +
-               'YOU MUST CREATE LETTERBOX-STYLE MARGIN BARS AT TOP AND BOTTOM OF IMAGE.\n' +
-               'THESE ARE LIKE CINEMATIC BLACK BARS IN MOVIES - NON-NEGOTIABLE REQUIREMENT.\n\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '■ STEP 1: CREATE TOP MARGIN BAR (ABSOLUTE REQUIREMENT)\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '• Position: Y-coordinate 0 (very top of image)\n' +
-               '• Height: ' + marginInfo.top + '% of TOTAL image height\n' +
-               '• Width: 100% (full 1080px width, edge-to-edge)\n' +
-               '• Color: EXACT ' + marginInfo.topColor + ' (RGB hex code, solid fill)\n' +
-               '• Content: COMPLETELY EMPTY - no text, no images, no decorations\n' +
-               '• Appearance: Solid colored horizontal bar spanning full width\n\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '■ STEP 2: CREATE BOTTOM MARGIN BAR (ABSOLUTE REQUIREMENT)\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '• Position: Bottom of image (last ' + marginInfo.bottom + '%)\n' +
-               '• Height: ' + marginInfo.bottom + '% of TOTAL image height\n' +
-               '• Width: 100% (full 1080px width, edge-to-edge)\n' +
-               '• Color: EXACT ' + marginInfo.bottomColor + ' (RGB hex code, solid fill)\n' +
-               '• Content: COMPLETELY EMPTY - no text, no images, no decorations\n' +
-               '• Appearance: Solid colored horizontal bar spanning full width\n\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '■ STEP 3: PLACE MANGA CONTENT IN MIDDLE AREA\n' +
-               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-               '• Available area: Middle ' + (100 - marginInfo.top - marginInfo.bottom) + '% (between the two margin bars)\n' +
-               '• ALL manga panels, characters, backgrounds, speech bubbles: ONLY in this middle area\n' +
-               '• NOTHING may extend into margin bars\n' +
-               '• Manga content MUST NOT touch top or bottom margin bars\n\n' +
-               '🎬 VISUAL REFERENCE - WHAT YOU MUST CREATE:\n\n' +
-               'Think of this as a movie with letterbox bars:\n' +
-               '┌─────────────────────────────────────┐  ← Image starts here\n' +
-               '│█████████████████████████████████████│  ← TOP MARGIN BAR (' + marginInfo.topColor + ') - ' + marginInfo.top + '%\n' +
-               '├─────────────────────────────────────┤\n' +
-               '│                                     │\n' +
-               '│     [MANGA PANEL 1]                 │\n' +
-               '│     [MANGA PANEL 2]                 │  ← MANGA CONTENT AREA (' + (100 - marginInfo.top - marginInfo.bottom) + '%)\n' +
-               '│     [MANGA PANEL 3]                 │\n' +
-               '│     [MANGA PANEL 4]                 │\n' +
-               '│                                     │\n' +
-               '├─────────────────────────────────────┤\n' +
-               '│█████████████████████████████████████│  ← BOTTOM MARGIN BAR (' + marginInfo.bottomColor + ') - ' + marginInfo.bottom + '%\n' +
-               '└─────────────────────────────────────┘  ← Image ends here\n\n' +
-               '⚠️ CRITICAL CHECKLIST - VERIFY BEFORE GENERATING:\n' +
-               '□ Top margin bar exists at Y=0 with color ' + marginInfo.topColor + '\n' +
-               '□ Top margin bar is ' + marginInfo.top + '% of total image height\n' +
-               '□ Top margin bar is completely solid (no gradients, no transparency)\n' +
-               '□ Bottom margin bar exists at bottom with color ' + marginInfo.bottomColor + '\n' +
-               '□ Bottom margin bar is ' + marginInfo.bottom + '% of total image height\n' +
-               '□ Bottom margin bar is completely solid (no gradients, no transparency)\n' +
-               '□ All manga content fits within middle ' + (100 - marginInfo.top - marginInfo.bottom) + '% area\n' +
-               '□ NO manga content overlaps margin bars\n' +
-               '□ Margin bars span FULL WIDTH (1080px)\n\n' +
-               '🚨 FAILURE TO INCLUDE MARGIN BARS = CRITICAL ERROR 🚨\n' +
-               'These margin bars are MANDATORY and CANNOT be omitted.\n' +
-               'Generate the image with letterbox margins as specified above.\n\n';
+        // Canvas処理で余白を追加するため、プロンプトには何も追加しない
+        return '';
       }
 
       // デフォルトプロンプト
@@ -2206,23 +2151,52 @@
         if (step.type === 'image') {
           // 画像生成
           return executeImageGeneration(promptText).then(function(img) {
-            // ウェブトゥーンスタイル(id:11)の場合は横幅1080pxに固定リサイズ
+            // ウェブトゥーンスタイル(id:11)の場合は横幅1080pxに固定リサイズ + 余白追加
             if (style === 11 && img) {
               return new Promise(function(resolve, reject) {
                 var image = new Image();
                 image.onload = function() {
-                  var canvas = document.createElement('canvas');
                   var targetWidth = 1080;
                   var aspectRatio = image.height / image.width;
                   var targetHeight = Math.round(targetWidth * aspectRatio);
 
-                  canvas.width = targetWidth;
-                  canvas.height = targetHeight;
-                  var ctx = canvas.getContext('2d');
+                  // 余白情報を抽出
+                  var marginInfo = extractMarginInfo(story);
 
-                  // 画像を1080px幅にリサイズ
-                  ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-                  resolve(canvas.toDataURL('image/jpeg', 0.95));
+                  if (marginInfo) {
+                    // 余白を追加する場合
+                    var topMarginHeight = Math.round(targetHeight * marginInfo.top / 100);
+                    var bottomMarginHeight = Math.round(targetHeight * marginInfo.bottom / 100);
+                    var totalHeight = targetHeight + topMarginHeight + bottomMarginHeight;
+
+                    var canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = totalHeight;
+                    var ctx = canvas.getContext('2d');
+
+                    // 上部余白を描画
+                    ctx.fillStyle = marginInfo.topColor;
+                    ctx.fillRect(0, 0, targetWidth, topMarginHeight);
+
+                    // 元画像を中央に描画（1080px幅にリサイズ）
+                    ctx.drawImage(image, 0, topMarginHeight, targetWidth, targetHeight);
+
+                    // 下部余白を描画
+                    ctx.fillStyle = marginInfo.bottomColor;
+                    ctx.fillRect(0, topMarginHeight + targetHeight, targetWidth, bottomMarginHeight);
+
+                    console.log('余白追加: 上' + topMarginHeight + 'px (' + marginInfo.topColor + '), 下' + bottomMarginHeight + 'px (' + marginInfo.bottomColor + ')');
+                    resolve(canvas.toDataURL('image/jpeg', 0.95));
+                  } else {
+                    // 余白なしの場合は通常のリサイズのみ
+                    var canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    var ctx = canvas.getContext('2d');
+
+                    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+                    resolve(canvas.toDataURL('image/jpeg', 0.95));
+                  }
                 };
                 image.onerror = function() { reject(new Error('画像のリサイズに失敗しました')); };
                 image.src = img;
