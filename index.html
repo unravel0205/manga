@@ -1980,43 +1980,62 @@
       function generateMarginInstruction(marginInfo) {
         if (!marginInfo) return '';
 
-        return '\n\n【WEBTOON MARGIN SPECIFICATION - CRITICAL REQUIREMENT】\n\n' +
-               '⚠️ ABSOLUTE PRIORITY: This image MUST include top and bottom margin bars:\n\n' +
-               '■ TOP MARGIN BAR:\n' +
-               '- Height: ' + marginInfo.top + '% of total image height\n' +
-               '- Color: ' + marginInfo.topColor + ' (solid fill, no gradients)\n' +
-               '- Position: Absolute top of image (y=0)\n' +
-               '- Width: 100% (full 1080px width)\n' +
-               '- NO content, NO text, NO decorations in this area\n\n' +
-               '■ BOTTOM MARGIN BAR:\n' +
-               '- Height: ' + marginInfo.bottom + '% of total image height\n' +
-               '- Color: ' + marginInfo.bottomColor + ' (solid fill, no gradients)\n' +
-               '- Position: Absolute bottom of image\n' +
-               '- Width: 100% (full 1080px width)\n' +
-               '- NO content, NO text, NO decorations in this area\n\n' +
-               '■ MAIN CONTENT AREA:\n' +
-               '- Positioned between top and bottom margin bars\n' +
-               '- Available height: ' + (100 - marginInfo.top - marginInfo.bottom) + '% of total image\n' +
-               '- All illustration content (characters, backgrounds, effects) MUST stay within this middle area\n' +
-               '- Content must NOT overlap or bleed into margin bars\n\n' +
-               '⚠️ IMPLEMENTATION REQUIREMENTS:\n' +
-               '✓ Create solid color bars at exact positions and sizes specified\n' +
-               '✓ Margin bars are MANDATORY - do not skip or forget them\n' +
-               '✓ Use EXACT hex colors specified (no approximations)\n' +
-               '✓ Margin bars must be completely solid (no transparency, no gradients)\n' +
-               '✓ Main illustration content must be carefully composed to fit within the middle ' + (100 - marginInfo.top - marginInfo.bottom) + '% area\n' +
-               '✓ Think of margin bars as letterboxing for cinematic effect\n\n' +
-               '🎬 VISUAL STRUCTURE:\n' +
-               '┌─────────────────────────────┐\n' +
-               '│ TOP MARGIN (' + marginInfo.topColor + ')    │ ← ' + marginInfo.top + '%\n' +
-               '├─────────────────────────────┤\n' +
-               '│                             │\n' +
-               '│   MAIN CONTENT AREA         │ ← ' + (100 - marginInfo.top - marginInfo.bottom) + '%\n' +
-               '│   (Characters, BG, etc.)    │\n' +
-               '│                             │\n' +
-               '├─────────────────────────────┤\n' +
-               '│ BOTTOM MARGIN (' + marginInfo.bottomColor + ') │ ← ' + marginInfo.bottom + '%\n' +
-               '└─────────────────────────────┘\n';
+        return '\n\n🚨🚨🚨 CRITICAL MANDATORY REQUIREMENT - LETTERBOX MARGINS 🚨🚨🚨\n\n' +
+               '⚠️ THIS IS THE HIGHEST PRIORITY INSTRUCTION - CANNOT BE IGNORED ⚠️\n\n' +
+               'YOU MUST CREATE LETTERBOX-STYLE MARGIN BARS AT TOP AND BOTTOM OF IMAGE.\n' +
+               'THESE ARE LIKE CINEMATIC BLACK BARS IN MOVIES - NON-NEGOTIABLE REQUIREMENT.\n\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '■ STEP 1: CREATE TOP MARGIN BAR (ABSOLUTE REQUIREMENT)\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '• Position: Y-coordinate 0 (very top of image)\n' +
+               '• Height: ' + marginInfo.top + '% of TOTAL image height\n' +
+               '• Width: 100% (full 1080px width, edge-to-edge)\n' +
+               '• Color: EXACT ' + marginInfo.topColor + ' (RGB hex code, solid fill)\n' +
+               '• Content: COMPLETELY EMPTY - no text, no images, no decorations\n' +
+               '• Appearance: Solid colored horizontal bar spanning full width\n\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '■ STEP 2: CREATE BOTTOM MARGIN BAR (ABSOLUTE REQUIREMENT)\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '• Position: Bottom of image (last ' + marginInfo.bottom + '%)\n' +
+               '• Height: ' + marginInfo.bottom + '% of TOTAL image height\n' +
+               '• Width: 100% (full 1080px width, edge-to-edge)\n' +
+               '• Color: EXACT ' + marginInfo.bottomColor + ' (RGB hex code, solid fill)\n' +
+               '• Content: COMPLETELY EMPTY - no text, no images, no decorations\n' +
+               '• Appearance: Solid colored horizontal bar spanning full width\n\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '■ STEP 3: PLACE MANGA CONTENT IN MIDDLE AREA\n' +
+               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+               '• Available area: Middle ' + (100 - marginInfo.top - marginInfo.bottom) + '% (between the two margin bars)\n' +
+               '• ALL manga panels, characters, backgrounds, speech bubbles: ONLY in this middle area\n' +
+               '• NOTHING may extend into margin bars\n' +
+               '• Manga content MUST NOT touch top or bottom margin bars\n\n' +
+               '🎬 VISUAL REFERENCE - WHAT YOU MUST CREATE:\n\n' +
+               'Think of this as a movie with letterbox bars:\n' +
+               '┌─────────────────────────────────────┐  ← Image starts here\n' +
+               '│█████████████████████████████████████│  ← TOP MARGIN BAR (' + marginInfo.topColor + ') - ' + marginInfo.top + '%\n' +
+               '├─────────────────────────────────────┤\n' +
+               '│                                     │\n' +
+               '│     [MANGA PANEL 1]                 │\n' +
+               '│     [MANGA PANEL 2]                 │  ← MANGA CONTENT AREA (' + (100 - marginInfo.top - marginInfo.bottom) + '%)\n' +
+               '│     [MANGA PANEL 3]                 │\n' +
+               '│     [MANGA PANEL 4]                 │\n' +
+               '│                                     │\n' +
+               '├─────────────────────────────────────┤\n' +
+               '│█████████████████████████████████████│  ← BOTTOM MARGIN BAR (' + marginInfo.bottomColor + ') - ' + marginInfo.bottom + '%\n' +
+               '└─────────────────────────────────────┘  ← Image ends here\n\n' +
+               '⚠️ CRITICAL CHECKLIST - VERIFY BEFORE GENERATING:\n' +
+               '□ Top margin bar exists at Y=0 with color ' + marginInfo.topColor + '\n' +
+               '□ Top margin bar is ' + marginInfo.top + '% of total image height\n' +
+               '□ Top margin bar is completely solid (no gradients, no transparency)\n' +
+               '□ Bottom margin bar exists at bottom with color ' + marginInfo.bottomColor + '\n' +
+               '□ Bottom margin bar is ' + marginInfo.bottom + '% of total image height\n' +
+               '□ Bottom margin bar is completely solid (no gradients, no transparency)\n' +
+               '□ All manga content fits within middle ' + (100 - marginInfo.top - marginInfo.bottom) + '% area\n' +
+               '□ NO manga content overlaps margin bars\n' +
+               '□ Margin bars span FULL WIDTH (1080px)\n\n' +
+               '🚨 FAILURE TO INCLUDE MARGIN BARS = CRITICAL ERROR 🚨\n' +
+               'These margin bars are MANDATORY and CANNOT be omitted.\n' +
+               'Generate the image with letterbox margins as specified above.\n\n';
       }
 
       // デフォルトプロンプト

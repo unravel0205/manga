@@ -42,6 +42,8 @@
 ---
 【出力テンプレート】
 
+{{MARGIN_INSTRUCTION}}
+
 ⚠️ CRITICAL: Generate a {{PANEL_COUNT}}-panel vertical manga (EXACTLY {{PANEL_COUNT}} panels)
 
 ---
@@ -262,8 +264,6 @@ Type D - Light Effects, Type E - Nature/Seasonal
 {{STORY}}
 
 {{HEIGHT_INSTRUCTION}}
-
-{{MARGIN_INSTRUCTION}}
 
 ---
 ⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS

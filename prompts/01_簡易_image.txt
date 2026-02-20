@@ -1,3 +1,5 @@
+{{MARGIN_INSTRUCTION}}
+
 ⚠️ CRITICAL: Generate a {{PANEL_COUNT}}-panel vertical manga (EXACTLY {{PANEL_COUNT}} panels)
 
 ---
@@ -277,8 +279,6 @@ Type E - Nature/Seasonal: Cherry blossoms, blue sky, sunlight through trees
 {{STORY}}
 
 {{HEIGHT_INSTRUCTION}}
-
-{{MARGIN_INSTRUCTION}}
 
 ---
 ⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS
