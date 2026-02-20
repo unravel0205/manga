@@ -276,6 +276,8 @@ Type E - Nature/Seasonal: Cherry blossoms, blue sky, sunlight through trees
 【STORY CONTENT】
 {{STORY}}
 
+{{HEIGHT_INSTRUCTION}}
+
 ---
 ⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS
 

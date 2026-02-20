@@ -1911,18 +1911,69 @@
         return instructions;
       }
 
+      // 高さ情報を抽出（Webtoonスタイル用）
+      function extractHeightInfo(storyText) {
+        var heightMatch = storyText.match(/高さ[：:]\s*(ショート|ミディアム|トール|フルスクリーン)/i);
+        if (!heightMatch) return null;
+        return heightMatch[1];
+      }
+
+      // 高さ指示を生成（Webtoonスタイル用）
+      function generateHeightInstruction(heightType) {
+        if (!heightType) return '';
+
+        var heightMap = {
+          'ショート': {
+            range: '約800〜900px',
+            ratio: '3:2程度',
+            usage: 'セリフだけのコマ、リアクションショット、ちょっとした会話',
+            instruction: 'COMPACT VERTICAL COMPOSITION - Short height (aspect ratio approximately 3:2). Concise scene focusing on facial expressions, quick reactions, or brief dialogue. Tight framing with minimal vertical space. Suitable for transitional moments or short exchanges.'
+          },
+          'ミディアム': {
+            range: '約1440〜1620px',
+            ratio: '3:4程度',
+            usage: '標準的なシーン、通常の会話、日常描写',
+            instruction: 'STANDARD VERTICAL COMPOSITION - Medium height (aspect ratio approximately 3:4). Balanced scene composition showing characters in typical interactions, everyday situations, or standard dialogue exchanges. Moderate vertical space allowing for comfortable character placement and environmental context.'
+          },
+          'トール': {
+            range: '約2160〜2400px',
+            ratio: '1:2程度',
+            usage: '重要なシーン、縦の動きを強調、立ち姿の全身',
+            instruction: 'EXTENDED VERTICAL COMPOSITION - Tall height (aspect ratio approximately 1:2). Emphasized vertical space perfect for showcasing full-body standing poses, vertical motion (jumping, falling, rising), or important dramatic moments. Extended composition creating strong visual impact and emphasizing character presence.'
+          },
+          'フルスクリーン': {
+            range: '約2700px以上',
+            ratio: '1:2.5以上',
+            usage: 'クライマックス、見開き的演出、圧倒的な迫力シーン',
+            instruction: 'FULL SCREEN VERTICAL COMPOSITION - Maximum height (aspect ratio 1:2.5 or greater). Overwhelming dramatic scene designed for climactic moments, spread-page level impact, or breathtaking visual spectacle. Extra-long vertical space creating immersive cinematic experience with maximum emotional and visual intensity.'
+          }
+        };
+
+        var info = heightMap[heightType];
+        if (!info) return '';
+
+        return '\n\n【WEBTOON HEIGHT SPECIFICATION - CRITICAL】\n\n' +
+               '■ Specified Height Type: ' + heightType + ' (' + info.range + ', ' + info.ratio + ')\n' +
+               '■ Usage: ' + info.usage + '\n\n' +
+               '⚠️ COMPOSITION INSTRUCTION:\n' +
+               info.instruction + '\n\n' +
+               '✓ Generate image with appropriate vertical dimension matching the specified height type\n' +
+               '✓ Width remains fixed at 1080px\n' +
+               '✓ Adjust composition and framing to suit the vertical space available\n';
+      }
+
       // デフォルトプロンプト
       function getDefaultPromptStep1() {
-        return 'あなたは漫画制作のプロンプトエンジニアです。\n以下のストーリー内容を分析し、4コマ漫画を生成するための詳細な画像生成プロンプトを作成してください。\n\n【出力形式】\n各コマごとに詳細を明記してください。\n\n---\n【ストーリー内容】\n{{STORY}}';
+        return 'あなたは漫画制作のプロンプトエンジニアです。\n以下のストーリー内容を分析し、4コマ漫画を生成するための詳細な画像生成プロンプトを作成してください。\n\n【出力形式】\n各コマごとに詳細を明記してください。\n\n---\n【ストーリー内容】\n{{STORY}}{{HEIGHT_INSTRUCTION}}';
       }
 
       function getDefaultPromptStep2() {
-        return '以下の指示に従って4コマ漫画を生成してください。\n\n{{GENERATED_PROMPT}}\n\n【画像全体の条件】\n・縦長1枚画像、アスペクト比 2:3\n・4K高解像度、カラー漫画';
+        return '以下の指示に従って4コマ漫画を生成してください。\n\n{{GENERATED_PROMPT}}\n\n【画像全体の条件】\n・縦長1枚画像、アスペクト比 2:3\n・4K高解像度、カラー漫画{{HEIGHT_INSTRUCTION}}';
       }
 
       // 簡易モード用デフォルトプロンプト
       function getDefaultPrompt() {
-        return '以下のストーリーを元に、縦型4コマ漫画を1枚の画像として生成してください。\n\n【ストーリー】\n{{STORY}}\n\n【画像仕様】\n・アスペクト比: 2:3（縦長）\n・4コマ漫画形式\n・カラー\n・高解像度（4K）\n・日本語の吹き出しテキスト';
+        return '以下のストーリーを元に、縦型4コマ漫画を1枚の画像として生成してください。\n\n【ストーリー】\n{{STORY}}\n\n【画像仕様】\n・アスペクト比: 2:3（縦長）\n・4コマ漫画形式\n・カラー\n・高解像度（4K）\n・日本語の吹き出しテキスト{{HEIGHT_INSTRUCTION}}';
       }
 
       // 変数置換
@@ -2027,6 +2078,10 @@
         var panels = extractPanelInfo(story);
         var customLayout = panels.length > 0 ? generateLayoutInstructions(panels) : '';
 
+        // 高さ情報を抽出（Webtoon Full Screen スタイルの場合のみ）
+        var heightType = style === 11 ? extractHeightInfo(story) : null;
+        var heightInstruction = style === 11 && heightType ? generateHeightInstruction(heightType) : '';
+
         return {
           STORY: story,
           STYLE_PROMPT: spt,
@@ -2035,7 +2090,8 @@
           CHARACTER_COUNT: charCountText,
           CHARACTER_DESCRIPTION: charDesc,
           CUSTOM_LAYOUT: customLayout,
-          PANEL_COUNT: panels.length > 0 ? panels.length.toString() : '4'
+          PANEL_COUNT: panels.length > 0 ? panels.length.toString() : '4',
+          HEIGHT_INSTRUCTION: heightInstruction
         };
       }
 

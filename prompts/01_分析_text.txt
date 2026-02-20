@@ -261,6 +261,8 @@ Type D - Light Effects, Type E - Nature/Seasonal
 【STORY CONTENT】
 {{STORY}}
 
+{{HEIGHT_INSTRUCTION}}
+
 ---
 ⚠️ CRITICAL: USER-SPECIFIED CONTENT INSTRUCTIONS
 
