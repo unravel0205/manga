@@ -2286,10 +2286,12 @@
         });
       }
 
-      // WebP画像をPNG形式に変換（Gemini API互換性のため）
-      async function convertWebPToPNG(dataUrl) {
+      // 画像をPNG形式のdata URLに変換（URL/WebP/その他 → PNG data URL）
+      async function convertToPNGDataUrl(imageSource) {
         return new Promise(function(resolve, reject) {
           var img = new Image();
+          img.crossOrigin = 'anonymous'; // CORS対応
+
           img.onload = function() {
             var canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -2298,8 +2300,12 @@
             ctx.drawImage(img, 0, 0);
             resolve(canvas.toDataURL('image/png'));
           };
-          img.onerror = function() { reject(new Error('画像の変換に失敗しました')); };
-          img.src = dataUrl;
+
+          img.onerror = function() {
+            reject(new Error('画像の変換に失敗しました: ' + imageSource.substring(0, 100)));
+          };
+
+          img.src = imageSource;
         });
       }
 
@@ -2312,11 +2318,16 @@
         for (var i = 0; i < selChars.length; i++) {
           var c = selChars[i];
           if (c && c.img) {
-            var imageData = c.img;
+            var imageData;
 
-            // WebP形式の場合はPNGに変換（Gemini API互換性のため）
-            if (c.img.startsWith('data:image/webp')) {
-              imageData = await convertWebPToPNG(c.img);
+            // URL形式またはWebP形式の場合はPNGに変換
+            if (c.img.startsWith('http') || c.img.startsWith('data:image/webp')) {
+              imageData = await convertToPNGDataUrl(c.img);
+            } else if (c.img.startsWith('data:image/')) {
+              // 既にdata URL形式（PNG/JPEG）の場合はPNGに変換
+              imageData = await convertToPNGDataUrl(c.img);
+            } else {
+              imageData = c.img;
             }
 
             // PNGとして送信
@@ -2326,11 +2337,15 @@
         }
 
         if (style === 99 && styleRef && styleRef.img) {
-          var imageData = styleRef.img;
+          var imageData;
 
-          // WebP形式の場合はPNGに変換
-          if (styleRef.img.startsWith('data:image/webp')) {
-            imageData = await convertWebPToPNG(styleRef.img);
+          // URL形式またはWebP形式の場合はPNGに変換
+          if (styleRef.img.startsWith('http') || styleRef.img.startsWith('data:image/webp')) {
+            imageData = await convertToPNGDataUrl(styleRef.img);
+          } else if (styleRef.img.startsWith('data:image/')) {
+            imageData = await convertToPNGDataUrl(styleRef.img);
+          } else {
+            imageData = styleRef.img;
           }
 
           var b = imageData.split(',')[1];
